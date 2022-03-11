@@ -1,0 +1,34 @@
+{
+  "name": "revcord",
+  "version": "1.0.0",
+  "description": "A discord-revolt bridge",
+  "type": "module",
+  "scripts": {
+    "start": "node --experimental-specifier-resolution=node --loader ts-node/esm index.ts",
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mayudev/revcord.git"
+  },
+  "author": "mayudev",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mayudev/revcord/issues"
+  },
+  "homepage": "https://github.com/mayudev/revcord#readme",
+  "dependencies": {
+    "@types/express": "^4.17.13",
+    "@types/npmlog": "^4.1.4",
+    "discord.js": "^13.6.0",
+    "dotenv": "^16.0.0",
+    "express": "^4.17.3",
+    "npmlog": "^6.0.1",
+    "revolt.js": "^5.2.8",
+    "typescript": "^4.6.2"
+  },
+  "devDependencies": {
+    "ts-node": "^10.7.0"
+  }
+}

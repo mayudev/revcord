@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+        "module": "es2015",
+        "baseUrl": "./",
+        "outDir": "build",
+        "target": "es6",
+        "allowJs": true,
+        "esModuleInterop": true,
+        "moduleResolution": "node",
+        "lib": ["es2020"],
+        "forceConsistentCasingInFileNames": true,
+    },
+    "include": ["**.ts"],
+    "exclude": ["./webui"]
+}
