@@ -91,17 +91,21 @@ export class Bot {
     this.revolt.on("message", (message) => {
       if (message.author.bot !== null) return;
 
-      // Find target Discord channel
-      const target = this.mappings.find((mapping) => mapping.revolt === message.channel_id);
+      try {
+        // Find target Discord channel
+        const target = this.mappings.find((mapping) => mapping.revolt === message.channel_id);
 
-      if (target) {
-        const channel = this.discord.channels.fetch(target.discord);
+        if (target) {
+          const channel = this.discord.channels.fetch(target.discord);
 
-        channel.then((channel) => {
-          if (channel instanceof TextChannel) {
-            channel.send(`[${message.author.username}] ${message.content}`);
-          }
-        });
+          channel.then((channel) => {
+            if (channel instanceof TextChannel) {
+              channel.send(`[${message.author.username}] ${message.content}`);
+            }
+          });
+        }
+      } catch (e) {
+        npmlog.error("Discord", "Couldn't send a message to Discord");
       }
     });
 
