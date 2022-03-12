@@ -37,11 +37,18 @@ export function handleRevoltMessage(
             throw new Error("No webhook");
           }
 
-          webhook.send({
-            content: messageString,
-            username: message.author.username,
-            avatarURL: message.author.generateAvatarURL(),
-          });
+          webhook
+            .send({
+              content: messageString,
+              username: message.author.username,
+              avatarURL: message.author.generateAvatarURL({}, true),
+            })
+            .catch(() => {
+              npmlog.error(
+                "Discord",
+                "Couldn't find the webhook. Restart the bot to rebuild webhook database."
+              );
+            });
         }
       });
     }
