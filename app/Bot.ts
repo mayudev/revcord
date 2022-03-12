@@ -54,17 +54,10 @@ export class Bot {
 
             if (!webhook) {
               npmlog.info("Discord", "Creating webhook for Discord#" + channel.name);
-              // No webhook found, create one
 
+              // No webhook found, create one
               webhook = await channel.createWebhook("revcord-" + mapping.revolt);
             }
-
-            await webhook.send({
-              content: "Test",
-              username: "Mayu",
-              avatarURL:
-                "https://autumn.revolt.chat/avatars/vu7G68qbaZOBKekgK8Y44YAt9jpD2M2d3ikikQxmDF",
-            });
 
             Main.webhooks.push(webhook);
           }
