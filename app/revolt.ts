@@ -29,7 +29,19 @@ export function handleRevoltMessage(
 
       channel.then((channel) => {
         if (channel instanceof TextChannel) {
-          channel.send(`[${message.author.username}] ${messageString}`);
+          const webhook = Main.webhooks.find(
+            (webhook) => webhook.name === "revcord-" + target.revolt
+          );
+
+          if (!webhook) {
+            throw new Error("No webhook");
+          }
+
+          webhook.send({
+            content: messageString,
+            username: message.author.username,
+            avatarURL: message.author.generateAvatarURL(),
+          });
         }
       });
     }

@@ -1,3 +1,4 @@
+import { Webhook } from "discord.js";
 import dotenv from "dotenv";
 import { Bot } from "./Bot";
 import { Mapping } from "./interfaces";
@@ -6,6 +7,7 @@ import getMappings from "./util/mappings";
 export class Main {
   static db;
   static mappings: Mapping[];
+  static webhooks: Webhook[];
 
   private bot: Bot;
 
@@ -18,6 +20,8 @@ export class Main {
     if (!discordToken || !revoltToken) {
       throw "At least one token was not provided";
     }
+
+    Main.webhooks = [];
   }
 
   /**
