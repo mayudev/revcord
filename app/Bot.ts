@@ -1,4 +1,4 @@
-import { Client as DiscordClient, Intents, TextChannel } from "discord.js";
+import { Client, Client as DiscordClient, Intents, TextChannel } from "discord.js";
 import { Client as RevoltClient } from "revolt.js";
 import npmlog from "npmlog";
 
@@ -32,6 +32,21 @@ export class Bot {
         const channel = this.discord.channels.cache.get(mapping.discord);
         try {
           if (channel instanceof TextChannel) {
+            if (
+              !channel.guild.me.permissions.has("MANAGE_WEBHOOKS") ||
+              !channel.guild.me.permissions.has("SEND_MESSAGES") ||
+              !channel.guild.me.permissions.has("VIEW_CHANNEL")
+            ) {
+              npmlog.error(
+                "Discord",
+                "Bot doesn't have sufficient permissions in server " +
+                  channel.guild.name +
+                  "."
+              );
+
+              return;
+            }
+
             const webhooks = await channel.fetchWebhooks();
 
             // Try to find already created webhook

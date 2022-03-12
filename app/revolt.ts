@@ -27,30 +27,34 @@ export function handleRevoltMessage(
         });
       }
 
-      channel.then((channel) => {
-        if (channel instanceof TextChannel) {
-          const webhook = Main.webhooks.find(
-            (webhook) => webhook.name === "revcord-" + target.revolt
-          );
+      channel
+        .then((channel) => {
+          if (channel instanceof TextChannel) {
+            const webhook = Main.webhooks.find(
+              (webhook) => webhook.name === "revcord-" + target.revolt
+            );
 
-          if (!webhook) {
-            throw new Error("No webhook");
+            if (!webhook) {
+              throw new Error("No webhook");
+            }
+
+            webhook
+              .send({
+                content: messageString,
+                username: message.author.username,
+                avatarURL: message.author.generateAvatarURL({}, true),
+              })
+              .catch(() => {
+                npmlog.error(
+                  "Discord",
+                  "Couldn't find the webhook. Restart the bot to rebuild webhook database."
+                );
+              });
           }
-
-          webhook
-            .send({
-              content: messageString,
-              username: message.author.username,
-              avatarURL: message.author.generateAvatarURL({}, true),
-            })
-            .catch(() => {
-              npmlog.error(
-                "Discord",
-                "Couldn't find the webhook. Restart the bot to rebuild webhook database."
-              );
-            });
-        }
-      });
+        })
+        .catch((e) => {
+          npmlog.error("Discord", e);
+        });
     }
   } catch (e) {
     npmlog.error("Discord", "Couldn't send a message to Discord", e);
