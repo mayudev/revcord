@@ -22,19 +22,6 @@ export class Bot {
     if (!discordToken || !revoltToken) {
       throw "At least one token was not provided";
     }
-
-    // Try to load JSON mappings
-    getMappings()
-      .then((mappings) => {
-        this.mappings = mappings;
-      })
-      .catch((err) => {
-        // JSON mappings don't exist, use the normal method.
-      });
-
-    this.setupWebUI();
-    this.setupDiscord();
-    this.setupRevolt();
   }
 
   setupWebUI() {
@@ -113,8 +100,22 @@ export class Bot {
   }
 
   public start(port: number): void {
-    this.app.listen(port, () => {
-      npmlog.info("WebUI", `Server listening on port ${port}`);
-    });
+    // Try to load JSON mappings
+    getMappings()
+      .then((mappings) => {
+        this.mappings = mappings;
+      })
+      .catch((err) => {
+        // JSON mappings don't exist, use the normal method.
+      })
+      .finally(() => {
+        this.setupWebUI();
+        this.setupDiscord();
+        this.setupRevolt();
+
+        this.app.listen(port, () => {
+          npmlog.info("WebUI", `Server listening on port ${port}`);
+        });
+      });
   }
 }
