@@ -1,6 +1,6 @@
-import { Bot } from "./app/Bot";
+import { Main } from "./app/Main";
 
 const port = 8080;
 
-const bot = new Bot();
-bot.start(port);
+const app = new Main();
+app.start(port);

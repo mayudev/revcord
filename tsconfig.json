@@ -5,11 +5,12 @@
         "outDir": "build",
         "target": "es6",
         "allowJs": true,
+        "checkJs": true,
         "esModuleInterop": true,
         "moduleResolution": "node",
         "lib": ["es2020"],
         "forceConsistentCasingInFileNames": true,
     },
-    "include": ["**.ts"],
+    "include": ["index.ts", "app/**/*.ts"],
     "exclude": ["./webui"]
 }
