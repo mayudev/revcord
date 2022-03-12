@@ -35,7 +35,7 @@ export function handleRevoltMessage(
             );
 
             if (!webhook) {
-              throw new Error("No webhook");
+              throw new Error("No webhook in channel Discord#" + channel.name);
             }
 
             webhook
@@ -47,13 +47,16 @@ export function handleRevoltMessage(
               .catch(() => {
                 npmlog.error(
                   "Discord",
-                  "Couldn't find the webhook. Restart the bot to rebuild webhook database."
+                  "Did you perhaps delete a webhook while the bot was working?"
                 );
               });
           }
         })
         .catch((e) => {
-          npmlog.error("Discord", e);
+          npmlog.error(
+            "Discord",
+            "Couldn't find the webhook. Restart the bot to rebuild webhook database. Permissions might be missing as well."
+          );
         });
     }
   } catch (e) {
