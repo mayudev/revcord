@@ -20,6 +20,9 @@ export class Bot {
   setupDiscordBot() {
     this.discord = new DiscordClient({
       intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES],
+      allowedMentions: {
+        parse: [],
+      },
     });
 
     this.discord.once("ready", () => {
@@ -80,6 +83,8 @@ export class Bot {
 
     this.revolt.once("ready", () => {
       npmlog.info("Revolt", `Logged in as ${this.revolt.user.username}`);
+
+      // TODO add permissions self-check
     });
 
     this.revolt.on("message", (message) =>
