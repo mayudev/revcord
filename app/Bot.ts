@@ -53,11 +53,23 @@ export class Bot {
         const target = this.mappings.find((mapping) => mapping.discord === message.channelId);
 
         if (target) {
-          this.revolt.channels
-            .get(target.revolt)
-            .sendMessage(
-              `[${message.author.username}#${message.author.discriminator}] ${message.content}`
-            );
+          const mask = {
+            name: message.author.username + "#" + message.author.discriminator,
+            avatar: message.author.avatarURL(),
+          };
+
+          let messageString = "";
+          messageString += message.content + "\n";
+
+          message.attachments.forEach((attachment) => {
+            messageString += attachment.url + "\n";
+          });
+
+          // revolt.js doesn't support masquerade yet, but we can use them using this messy trick.
+          this.revolt.channels.get(target.revolt).sendMessage({
+            content: messageString,
+            masquerade: mask,
+          } as any);
         }
       } catch (e) {
         npmlog.error("Revolt", "Couldn't send a message to Revolt");
@@ -85,14 +97,23 @@ export class Bot {
         if (target) {
           const channel = this.discord.channels.fetch(target.discord);
 
+          let messageString = "";
+          messageString += message.content + "\n";
+
+          if (message.attachments !== null) {
+            message.attachments.forEach((attachment) => {
+              messageString += this.revolt.generateFileURL(attachment) + "\n";
+            });
+          }
+
           channel.then((channel) => {
             if (channel instanceof TextChannel) {
-              channel.send(`[${message.author.username}] ${message.content}`);
+              channel.send(`[${message.author.username}] ${messageString}`);
             }
           });
         }
       } catch (e) {
-        npmlog.error("Discord", "Couldn't send a message to Discord");
+        npmlog.error("Discord", "Couldn't send a message to Discord", e);
       }
     });
 
