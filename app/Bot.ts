@@ -131,6 +131,8 @@ export class Bot {
     this.revolt.on("message", async (message) => {
       if (message.author.bot !== null) return;
 
+      if (typeof message.content != "string") return;
+
       if (message.content.toString().startsWith("rc!")) {
         // Handle bot command
         const args = message.content.toString().split(" ");
