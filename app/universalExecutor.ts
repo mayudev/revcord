@@ -3,6 +3,7 @@ import npmlog from "npmlog";
 import { Client as RevoltClient } from "revolt.js";
 import { Channel } from "revolt.js/dist/maps/Channels";
 import { initiateDiscordChannel } from "./discord";
+import { Mapping } from "./interfaces";
 import { Main } from "./Main";
 import { MappingModel } from "./models/Mapping";
 
@@ -31,8 +32,15 @@ export default class UniversalExecutor {
       );
     }
 
-    if (typeof this.revolt.channels.get(revoltTarget) === "undefined") {
-      // Look in channel names
+    let discordChannelName;
+    let revoltChannelName;
+
+    let revoltChannel = this.revolt.channels.get(revoltTarget);
+
+    if (typeof revoltChannel === "undefined") {
+      // Revolt channel name was provided.
+
+      // Loop over channels
       let target: Channel;
       this.revolt.channels.forEach((channel) => {
         if (channel.name.toLowerCase() === revoltTarget.toLowerCase()) {
@@ -41,21 +49,29 @@ export default class UniversalExecutor {
       });
 
       if (!target) throw new ConnectionError("Revolt channel not found.");
-      else revoltTarget = target._id;
+      else {
+        revoltTarget = target._id;
+        revoltChannelName = target.name;
+      }
+    } else {
+      // Revolt channel ID was provided - we're just grabbing the name.
+      revoltChannelName = revoltChannel.name;
     }
 
     let discordChannel: TextChannel;
 
     try {
-      // If it passes, a correct Discord channel id was provided.
+      // A correct Discord channel ID was provided
       let chan = await this.discord.channels.fetch(discordTarget);
       if (chan instanceof TextChannel) {
         discordChannel = chan;
+        discordChannelName = chan.name;
       } else {
         throw new ConnectionError("We're in a weird position.");
       }
     } catch (e) {
-      // Look for name
+      // A Discord channel name was provided
+
       let channel = this.discord.channels.cache.find((channel) => {
         if (channel instanceof TextChannel) {
           return channel.name.toLowerCase() === discordTarget.toLowerCase();
@@ -68,17 +84,25 @@ export default class UniversalExecutor {
       } else {
         // Must be TextChannel, because checks were performed earlier.
         discordChannel = channel as TextChannel;
-        console.log("channel found");
+
+        discordTarget = discordChannel.id;
+        discordChannelName = discordChannel.name;
       }
     }
 
-    // Everything went well.
+    /*
+      By this point, both discordTarget and revoltTarget contain correct channel IDs.
+    */
+
     const mapping = {
       discord: discordTarget,
       revolt: revoltTarget,
     };
-    // Initiate Discord channel (setup webhooks)
 
+    // Debugging
+    console.dir(mapping);
+
+    // Initiate Discord channel (setup webhooks)
     try {
       await initiateDiscordChannel(discordChannel, mapping);
 
@@ -86,6 +110,8 @@ export default class UniversalExecutor {
       await MappingModel.create({
         discordChannel: discordTarget,
         revoltChannel: revoltTarget,
+        discordChannelName: discordChannelName,
+        revoltChannelName: revoltChannelName,
       });
 
       // Push into memory
@@ -134,5 +160,19 @@ export default class UniversalExecutor {
         throw new ConnectionError("This channel isn't connected to anything.");
       }
     }
+  }
+
+  /**
+   * Return all existing connections
+   */
+  async connections(): Promise<Mapping[]> {
+    const mappings = await MappingModel.findAll();
+
+    const channelPairs = mappings.map((mapping) => ({
+      discord: mapping.discordChannelName,
+      revolt: mapping.revoltChannelName,
+    }));
+
+    return channelPairs;
   }
 }

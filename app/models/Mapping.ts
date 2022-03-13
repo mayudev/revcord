@@ -7,4 +7,6 @@ export class MappingModel extends Model<
   declare id: number;
   declare discordChannel: string;
   declare revoltChannel: string;
+  declare discordChannelName: string;
+  declare revoltChannelName: string;
 }

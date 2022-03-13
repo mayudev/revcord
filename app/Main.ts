@@ -56,6 +56,12 @@ export class Main {
         revoltChannel: {
           type: DataTypes.STRING,
         },
+        discordChannelName: {
+          type: DataTypes.STRING,
+        },
+        revoltChannelName: {
+          type: DataTypes.STRING,
+        },
       },
       { sequelize, modelName: "mapping" }
     );
