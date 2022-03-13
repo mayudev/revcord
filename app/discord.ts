@@ -1,4 +1,4 @@
-import { AnyChannel, Message, TextChannel } from "discord.js";
+import { AnyChannel, Guild, Message, TextChannel } from "discord.js";
 import npmlog from "npmlog";
 import { Client as RevoltClient } from "revolt.js";
 import { Client as DiscordClient } from "discord.js";
@@ -74,3 +74,8 @@ export async function initiateDiscordChannel(channel: AnyChannel, mapping: Mappi
     Main.webhooks.push(webhook);
   }
 }
+
+/**
+ * Register all slash commands in a Discord server
+ */
+export async function initializeDiscordGuild(guild: Guild) {}

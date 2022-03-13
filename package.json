@@ -26,6 +26,8 @@
     "express": "^4.17.3",
     "npmlog": "^6.0.1",
     "revolt.js": "^5.2.8",
+    "sequelize": "^6.17.0",
+    "sqlite3": "^4.2.0",
     "typescript": "^4.6.2"
   },
   "devDependencies": {
