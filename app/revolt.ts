@@ -48,11 +48,9 @@ export function handleRevoltMessage(
                 username: message.author.username,
                 avatarURL: message.author.generateAvatarURL({}, true),
               })
-              .catch(() => {
-                npmlog.error(
-                  "Discord",
-                  "Did you perhaps delete a webhook while the bot was working?"
-                );
+              .catch((e) => {
+                npmlog.error("Discord", "A webhook error occured.");
+                npmlog.error("Discord", e);
               });
           }
         })

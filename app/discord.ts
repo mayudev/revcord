@@ -98,6 +98,12 @@ export async function unregisterDiscordChannel(channel: AnyChannel, mapping: Map
     npmlog.info("Discord", "Removing webhook for Discord#" + channel.name);
 
     // Remove the webhook
-    if (webhook) await webhook.delete();
+    if (webhook) {
+      await webhook.delete();
+
+      // Remove from memory
+      const i = Main.webhooks.indexOf(webhook);
+      Main.webhooks.splice(i, 1);
+    }
   }
 }
