@@ -1,9 +1,8 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
 import { DiscordCommand } from "../interfaces";
-import UniversalExecutor from "../universalExecutor";
+import UniversalExecutor, { ConnectionError } from "../universalExecutor";
 import { CommandInteraction } from "discord.js";
 import npmlog from "npmlog";
-import { ConnectionError } from "sequelize";
 
 export class DisconnectCommand implements DiscordCommand {
   data = new SlashCommandBuilder()
