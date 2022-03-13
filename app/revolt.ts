@@ -15,8 +15,6 @@ export function handleRevoltMessage(
   revolt: RevoltClient,
   message: Message
 ) {
-  if (message.author.bot !== null) return;
-
   try {
     // Find target Discord channel
     const target = Main.mappings.find((mapping) => mapping.revolt === message.channel_id);

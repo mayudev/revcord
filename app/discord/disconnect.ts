@@ -7,7 +7,7 @@ import npmlog from "npmlog";
 export class DisconnectCommand implements DiscordCommand {
   data = new SlashCommandBuilder()
     .setName("disconnect")
-    .setDescription("Disconnects this channel from Revolt");
+    .setDescription("Disconnect this channel from Revolt");
 
   async execute(interaction: CommandInteraction, executor: UniversalExecutor) {
     // Permission check

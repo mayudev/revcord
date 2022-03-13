@@ -4,7 +4,7 @@ import { DisconnectCommand } from "./disconnect";
 import { ListConnectionsCommand } from "./listConnections";
 
 /**
- * An array of slash commands
+ * An array of Discord slash commands
  */
 export const slashCommands: DiscordCommand[] = [
   new ConnectCommand(),

@@ -7,14 +7,17 @@ import { Main } from "./Main";
 import { handleDiscordMessage, initiateDiscordChannel } from "./discord";
 import { handleRevoltMessage } from "./revolt";
 import { registerSlashCommands } from "./discord/slash";
-import { DiscordCommand } from "./interfaces";
+import { DiscordCommand, RevoltCommand } from "./interfaces";
 import { slashCommands } from "./discord/commands";
 import UniversalExecutor from "./universalExecutor";
+import { revoltCommands } from "./revolt/commands";
 
 export class Bot {
   private discord: DiscordClient;
   private revolt: RevoltClient;
   private commands: Collection<string, DiscordCommand>;
+  // ah yes, using discord.js collections for revolt commands
+  private revoltCommands: Collection<string, RevoltCommand>;
   private executor: UniversalExecutor;
 
   constructor(private usingJsonMappings: boolean) {}
@@ -105,6 +108,14 @@ export class Bot {
     this.revolt.once("ready", () => {
       npmlog.info("Revolt", `Logged in as ${this.revolt.user.username}`);
 
+      // Initialize revolt commands
+      this.revoltCommands = new Collection();
+
+      // Insert exported Revolt commands into the collection
+      revoltCommands.map((command) => {
+        this.revoltCommands.set(command.data.name, command);
+      });
+
       // TODO add permissions self-check
       Main.mappings.forEach(async (mapping) => {
         const channel = this.revolt.channels.get(mapping.revolt);
@@ -117,9 +128,36 @@ export class Bot {
       });
     });
 
-    this.revolt.on("message", (message) =>
-      handleRevoltMessage(this.discord, this.revolt, message)
-    );
+    this.revolt.on("message", async (message) => {
+      if (message.author.bot !== null) return;
+
+      if (message.content.toString().startsWith("rc!")) {
+        // Handle bot command
+        const args = message.content.toString().split(" ");
+        const commandName = args[0].slice("rc!".length);
+        args.shift();
+        const arg = args.join(" ");
+
+        // Try to find the command in collection
+        if (this.usingJsonMappings) return;
+
+        const command = this.revoltCommands.get(commandName);
+
+        if (!command) {
+          npmlog.info("Revolt", "no command");
+          return;
+        }
+
+        try {
+          await command.execute(message, arg, this.executor);
+        } catch (e) {
+          npmlog.error("Revolt", "Error while executing command");
+          npmlog.error("Revolt", e);
+        }
+      } else {
+        handleRevoltMessage(this.discord, this.revolt, message);
+      }
+    });
 
     this.revolt.loginBot(process.env.REVOLT_TOKEN);
   }
