@@ -17,7 +17,7 @@ export class Bot {
   private commands: Collection<string, DiscordCommand>;
   private executor: UniversalExecutor;
 
-  constructor() {}
+  constructor(private usingJsonMappings: boolean) {}
 
   public async start() {
     this.setupDiscordBot();
@@ -54,10 +54,13 @@ export class Bot {
       // Convert commands into REST-friendly format
       let commandsJson = this.commands.map((command) => command.data.toJSON());
 
-      // Register commands for each guild
-      this.discord.guilds.cache.forEach((guild) => {
-        registerSlashCommands(rest, this.discord, guild.id, <any>commandsJson);
-      });
+      // Do not allow commands when using mappings.json mode.
+      if (!this.usingJsonMappings) {
+        // Register commands for each guild
+        this.discord.guilds.cache.forEach((guild) => {
+          registerSlashCommands(rest, this.discord, guild.id, <any>commandsJson);
+        });
+      }
 
       // Create webhooks
       Main.mappings.forEach(async (mapping) => {
@@ -72,7 +75,7 @@ export class Bot {
     });
 
     this.discord.on("interactionCreate", async (interaction) => {
-      if (!interaction.isCommand()) return;
+      if (!interaction.isCommand() || this.usingJsonMappings) return;
 
       const command = this.commands.get(interaction.commandName);
 
@@ -107,9 +110,6 @@ export class Bot {
         const channel = this.revolt.channels.get(mapping.revolt);
         try {
           if (channel) {
-            console.log(
-              "Permissions for channel " + channel.name + " = " + channel.permission
-            );
           }
         } catch (e) {
           npmlog.error("Revolt", e);

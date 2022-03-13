@@ -77,10 +77,12 @@ export class Main {
    * Start the Web server, Discord and Revolt bots
    */
   public async start(port: number): Promise<void> {
+    let usingJson = false;
     try {
       // Try to load JSON
       const mappings = await getMappings();
       Main.mappings = mappings;
+      usingJson = true;
     } catch {
       // Query the database instead
       try {
@@ -93,7 +95,7 @@ export class Main {
         npmlog.error("db", e);
       }
     } finally {
-      this.bot = new Bot();
+      this.bot = new Bot(usingJson);
       this.bot.start();
     }
   }

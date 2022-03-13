@@ -11,7 +11,7 @@ export default async function getMappings(): Promise<Array<Mapping>> {
     const data = JSON.parse(file) as Array<Mapping>;
     return data;
   } catch (err) {
-    npmlog.warn("mappings", "No mappings found");
+    npmlog.warn("mappings", "No mappings.json found");
     throw "No mappings";
   }
 }
