@@ -3,7 +3,7 @@ import { Client as RevoltClient } from "revolt.js";
 import npmlog from "npmlog";
 
 import { Main } from "./Main";
-import { handleDiscordMessage } from "./discord";
+import { handleDiscordMessage, initiateDiscordChannel } from "./discord";
 import { handleRevoltMessage } from "./revolt";
 
 export class Bot {
@@ -34,39 +34,10 @@ export class Bot {
       Main.mappings.forEach(async (mapping) => {
         const channel = this.discord.channels.cache.get(mapping.discord);
         try {
-          if (channel instanceof TextChannel) {
-            if (
-              !channel.guild.me.permissions.has("MANAGE_WEBHOOKS") ||
-              !channel.guild.me.permissions.has("SEND_MESSAGES") ||
-              !channel.guild.me.permissions.has("VIEW_CHANNEL")
-            ) {
-              npmlog.error(
-                "Discord",
-                "Bot doesn't have sufficient permissions in server " +
-                  channel.guild.name +
-                  "."
-              );
-
-              return;
-            }
-
-            const webhooks = await channel.fetchWebhooks();
-
-            // Try to find already created webhook
-            let webhook = webhooks.find((wh) => wh.name === "revcord-" + mapping.revolt);
-
-            if (!webhook) {
-              npmlog.info("Discord", "Creating webhook for Discord#" + channel.name);
-
-              // No webhook found, create one
-              webhook = await channel.createWebhook("revcord-" + mapping.revolt);
-            }
-
-            Main.webhooks.push(webhook);
-          }
-        } catch (error) {
+          initiateDiscordChannel(channel, mapping);
+        } catch (e) {
           npmlog.error("Discord", "An error occured while initializing webhooks");
-          npmlog.error("Discord", error);
+          npmlog.error("Discord", e);
         }
       });
     });
@@ -85,6 +56,18 @@ export class Bot {
       npmlog.info("Revolt", `Logged in as ${this.revolt.user.username}`);
 
       // TODO add permissions self-check
+      Main.mappings.forEach(async (mapping) => {
+        const channel = this.revolt.channels.get(mapping.revolt);
+        try {
+          if (channel) {
+            console.log(
+              "Permissions for channel " + channel.name + " = " + channel.permission
+            );
+          }
+        } catch (e) {
+          npmlog.error("Revolt", e);
+        }
+      });
     });
 
     this.revolt.on("message", (message) =>

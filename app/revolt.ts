@@ -4,6 +4,12 @@ import { Client as RevoltClient } from "revolt.js";
 import { Message } from "revolt.js/dist/maps/Messages";
 import { Main } from "./Main";
 
+/**
+ * Find a relevant mapping and direct a Revolt message to Discord
+ * @param discord Discord client
+ * @param revolt Revolt client
+ * @param message Revolt message object
+ */
 export function handleRevoltMessage(
   discord: DiscordClient,
   revolt: RevoltClient,
