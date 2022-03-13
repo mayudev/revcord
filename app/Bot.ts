@@ -1,14 +1,19 @@
-import { Client, Client as DiscordClient, Intents, TextChannel } from "discord.js";
+import { Client as DiscordClient, Collection, Intents } from "discord.js";
 import { Client as RevoltClient } from "revolt.js";
+import { REST } from "@discordjs/rest";
 import npmlog from "npmlog";
 
 import { Main } from "./Main";
 import { handleDiscordMessage, initiateDiscordChannel } from "./discord";
 import { handleRevoltMessage } from "./revolt";
+import { registerSlashCommands } from "./discord/slash";
+import { DiscordCommand } from "./interfaces";
+import { slashCommands } from "./discord/commands";
 
 export class Bot {
   private discord: DiscordClient;
   private revolt: RevoltClient;
+  private commands: Collection<string, DiscordCommand>;
 
   constructor() {}
 
@@ -31,6 +36,26 @@ export class Bot {
         `Logged in as ${this.discord.user.username}#${this.discord.user.discriminator}`
       );
 
+      // Register slash commands
+      const rest = new REST({ version: "9" }).setToken(process.env.DISCORD_TOKEN);
+
+      // Initialize slash commands collection
+      this.commands = new Collection();
+
+      // Insert exported slash commands into the collection
+      slashCommands.map((command) => {
+        this.commands.set(command.data.name, command);
+      });
+
+      // Convert commands into REST-friendly format
+      let commandsJson = this.commands.map((command) => command.data.toJSON());
+
+      // Register commands for each guild
+      this.discord.guilds.cache.forEach((guild) => {
+        registerSlashCommands(rest, this.discord, guild.id, <any>commandsJson);
+      });
+
+      // Create webhooks
       Main.mappings.forEach(async (mapping) => {
         const channel = this.discord.channels.cache.get(mapping.discord);
         try {
@@ -40,6 +65,24 @@ export class Bot {
           npmlog.error("Discord", e);
         }
       });
+    });
+
+    this.discord.on("interactionCreate", async (interaction) => {
+      if (!interaction.isCommand()) return;
+
+      const command = this.commands.get(interaction.commandName);
+
+      if (!command) {
+        npmlog.info("Discord", "no command");
+        return;
+      }
+
+      try {
+        await command.execute(interaction);
+      } catch (e) {
+        npmlog.error("Discord", "Error while executing slash command");
+        npmlog.error("Discord", e);
+      }
     });
 
     this.discord.on("messageCreate", (message) =>
