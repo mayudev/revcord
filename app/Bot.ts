@@ -9,11 +9,13 @@ import { handleRevoltMessage } from "./revolt";
 import { registerSlashCommands } from "./discord/slash";
 import { DiscordCommand } from "./interfaces";
 import { slashCommands } from "./discord/commands";
+import UniversalExecutor from "./universalExecutor";
 
 export class Bot {
   private discord: DiscordClient;
   private revolt: RevoltClient;
   private commands: Collection<string, DiscordCommand>;
+  private executor: UniversalExecutor;
 
   constructor() {}
 
@@ -38,6 +40,8 @@ export class Bot {
 
       // Register slash commands
       const rest = new REST({ version: "9" }).setToken(process.env.DISCORD_TOKEN);
+
+      this.executor = new UniversalExecutor(this.discord, this.revolt);
 
       // Initialize slash commands collection
       this.commands = new Collection();
@@ -78,7 +82,7 @@ export class Bot {
       }
 
       try {
-        await command.execute(interaction);
+        await command.execute(interaction, this.executor);
       } catch (e) {
         npmlog.error("Discord", "Error while executing slash command");
         npmlog.error("Discord", e);
