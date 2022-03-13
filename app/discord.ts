@@ -76,6 +76,28 @@ export async function initiateDiscordChannel(channel: AnyChannel, mapping: Mappi
 }
 
 /**
- * Register all slash commands in a Discord server
+ * Unregister a Discord channel (when disconnecting)
  */
-export async function initializeDiscordGuild(guild: Guild) {}
+export async function unregisterDiscordChannel(channel: AnyChannel, mapping: Mapping) {
+  if (channel instanceof TextChannel) {
+    if (
+      !channel.guild.me.permissions.has("MANAGE_WEBHOOKS") ||
+      !channel.guild.me.permissions.has("SEND_MESSAGES") ||
+      !channel.guild.me.permissions.has("VIEW_CHANNEL")
+    ) {
+      throw new Error(
+        "Bot doesn't have sufficient permissions in server " + channel.guild.name + "."
+      );
+    }
+
+    const webhooks = await channel.fetchWebhooks();
+
+    // Try to find created webhooks
+    let webhook = webhooks.find((wh) => wh.name === "revcord-" + mapping.revolt);
+
+    npmlog.info("Discord", "Removing webhook for Discord#" + channel.name);
+
+    // Remove the webhook
+    if (webhook) await webhook.delete();
+  }
+}

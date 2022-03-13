@@ -2,7 +2,7 @@ import { Client as DiscordClient, TextChannel } from "discord.js";
 import npmlog from "npmlog";
 import { Client as RevoltClient } from "revolt.js";
 import { Channel } from "revolt.js/dist/maps/Channels";
-import { initiateDiscordChannel } from "./discord";
+import { initiateDiscordChannel, unregisterDiscordChannel } from "./discord";
 import { ConnectionPair, Mapping } from "./interfaces";
 import { Main } from "./Main";
 import { MappingModel } from "./models/Mapping";
@@ -99,9 +99,6 @@ export default class UniversalExecutor {
       revolt: revoltTarget,
     };
 
-    // Debugging
-    console.dir(mapping);
-
     // Initiate Discord channel (setup webhooks)
     try {
       await initiateDiscordChannel(discordChannel, mapping);
@@ -131,6 +128,7 @@ export default class UniversalExecutor {
    */
   async disconnect(platform: Platforms, channelId: string) {
     if (platform === "discord") {
+      const mapping = Main.mappings.find((mapping) => mapping.discord === channelId);
       const match = Main.mappings.map((mapping) => mapping.discord).indexOf(channelId);
       if (match > -1) {
         // Remove the mapping from memory
@@ -138,6 +136,10 @@ export default class UniversalExecutor {
 
         // And from the database
         await MappingModel.destroy({ where: { discordChannel: channelId } });
+
+        // And remove the webhook
+        const channel = await this.discord.channels.fetch(mapping.discord);
+        unregisterDiscordChannel(channel, mapping);
 
         /*
           Consideration: only the first match is removed from memory, while all
@@ -150,12 +152,19 @@ export default class UniversalExecutor {
 
       return;
     } else if (platform === "revolt") {
+      const mapping = Main.mappings.find((mapping) => mapping.revolt === channelId);
       const match = Main.mappings.map((mapping) => mapping.revolt).indexOf(channelId);
 
       if (match > -1) {
+        // Remove the mapping from memory
         Main.mappings.splice(match, 1);
 
+        // And from the database
         await MappingModel.destroy({ where: { revoltChannel: channelId } });
+
+        // And remove the webhook
+        const channel = await this.discord.channels.fetch(mapping.discord);
+        unregisterDiscordChannel(channel, mapping);
       } else {
         throw new ConnectionError("This channel isn't connected to anything.");
       }
