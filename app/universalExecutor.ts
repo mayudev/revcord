@@ -3,7 +3,7 @@ import npmlog from "npmlog";
 import { Client as RevoltClient } from "revolt.js";
 import { Channel } from "revolt.js/dist/maps/Channels";
 import { initiateDiscordChannel } from "./discord";
-import { Mapping } from "./interfaces";
+import { ConnectionPair, Mapping } from "./interfaces";
 import { Main } from "./Main";
 import { MappingModel } from "./models/Mapping";
 
@@ -165,7 +165,7 @@ export default class UniversalExecutor {
   /**
    * Return all existing connections
    */
-  async connections(): Promise<Mapping[]> {
+  async connections(): Promise<ConnectionPair[]> {
     const mappings = await MappingModel.findAll();
 
     const channelPairs = mappings.map((mapping) => ({

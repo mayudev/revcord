@@ -13,3 +13,5 @@ export interface DiscordCommand {
     | Omit<SlashCommandBuilder, "addSubcommandGroup" | "addSubcommand">;
   execute(interaction: CommandInteraction, executor: UniversalExecutor): Promise<void>;
 }
+
+export interface ConnectionPair extends Mapping {}
