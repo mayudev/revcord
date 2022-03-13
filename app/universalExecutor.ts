@@ -13,6 +13,17 @@ export default class UniversalExecutor {
   constructor(private discord: DiscordClient, private revolt: RevoltClient) {}
 
   async connect(discordTarget: string, revoltTarget: string) {
+    // Find an existing mapping
+    const existingMapping = Main.mappings.find(
+      (mapping) => mapping.discord === discordTarget || mapping.revolt === revoltTarget
+    );
+
+    if (existingMapping) {
+      throw new ConnectionError(
+        "Either the Revolt or Discord channel is already bridged. Use the `disconnect` command and then try again."
+      );
+    }
+
     if (typeof this.revolt.channels.get(revoltTarget) === "undefined") {
       // Look in channel names
       let target: Channel;
