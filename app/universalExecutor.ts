@@ -4,6 +4,7 @@ import { Client as RevoltClient } from "revolt.js";
 import { Channel } from "revolt.js/dist/maps/Channels";
 import { initiateDiscordChannel } from "./discord";
 import { Main } from "./Main";
+import { MappingModel } from "./models/Mapping";
 
 export class ConnectionError extends Error {}
 
@@ -62,8 +63,12 @@ export default class UniversalExecutor {
 
     try {
       await initiateDiscordChannel(discordChannel, mapping);
+
       // Insert into database
-      // TODO
+      await MappingModel.create({
+        discordChannel: discordTarget,
+        revoltChannel: revoltTarget,
+      });
 
       // Push into memory
       Main.mappings.push(mapping);
