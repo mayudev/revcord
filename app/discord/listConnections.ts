@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
 import universalExecutor from "app/universalExecutor";
-import { CommandInteraction, CacheType } from "discord.js";
+import { CommandInteraction } from "discord.js";
 import npmlog from "npmlog";
 import { DiscordCommand } from "../interfaces";
 
