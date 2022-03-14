@@ -1,16 +1,42 @@
-import { AnyChannel, Guild, Message, TextChannel } from "discord.js";
+import {
+  AnyChannel,
+  Collection,
+  Message,
+  MessageAttachment,
+  TextChannel,
+} from "discord.js";
 import npmlog from "npmlog";
 import { Client as RevoltClient } from "revolt.js";
 import { Client as DiscordClient } from "discord.js";
 import { Main } from "./Main";
-import { Mapping } from "./interfaces";
+import { Mapping, PartialDiscordMessage } from "./interfaces";
+
+/**
+ * Format a Discord message with all attachments to Revolt-friendly format
+ * @param attachments message.attachments
+ * @param content message.content
+ * @returns Formatted string
+ */
+function formatMessage(
+  attachments: Collection<string, MessageAttachment>,
+  content: string
+) {
+  let messageString = "";
+  messageString += content + "\n";
+
+  attachments.forEach((attachment) => {
+    messageString += attachment.url + "\n";
+  });
+
+  return messageString;
+}
 
 /**
  * Find a relevant mapping and direct a Discord message to Revolt
  * @param revolt Revolt client
  * @param message Discord message object
  */
-export function handleDiscordMessage(revolt: RevoltClient, message: Message) {
+export async function handleDiscordMessage(revolt: RevoltClient, message: Message) {
   if (message.author.bot) return;
 
   try {
@@ -23,21 +49,92 @@ export function handleDiscordMessage(revolt: RevoltClient, message: Message) {
         avatar: message.author.avatarURL(),
       };
 
-      let messageString = "";
-      messageString += message.content + "\n";
-
-      message.attachments.forEach((attachment) => {
-        messageString += attachment.url + "\n";
-      });
+      const messageString = formatMessage(message.attachments, message.content);
 
       // revolt.js doesn't support masquerade yet, but we can use them using this messy trick.
-      revolt.channels.get(target.revolt).sendMessage({
+      const sentMessage = await revolt.channels.get(target.revolt).sendMessage({
         content: messageString,
         masquerade: mask,
       } as any);
+
+      // Save in cache
+      Main.discordCache.push({
+        parentMessage: message.id,
+        createdMessage: sentMessage._id,
+        channelId: target.discord,
+      });
     }
   } catch (e) {
     npmlog.error("Revolt", "Couldn't send a message to Revolt");
+  }
+}
+
+/**
+ * Handle Discord message update and update the relevant message in Revolt
+ * @param revolt Revolt client
+ * @param message PartialDiscordMessage object (oldMessage, just content from newMessage)
+ */
+export async function handleDiscordMessageUpdate(
+  revolt: RevoltClient,
+  message: PartialDiscordMessage
+) {
+  try {
+    // Find target Revolt channel
+    const target = Main.mappings.find((mapping) => mapping.discord === message.channelId);
+
+    if (target) {
+      const cachedMessage = Main.discordCache.find(
+        (cached) => cached.parentMessage === message.id
+      );
+
+      if (cachedMessage) {
+        const messageString = formatMessage(message.attachments, message.content);
+
+        const channel = await revolt.channels.get(target.revolt);
+        const messageToEdit = await channel.fetchMessage(cachedMessage.createdMessage);
+
+        await messageToEdit.edit({
+          content: messageString,
+        });
+      }
+    }
+  } catch (e) {
+    npmlog.error("Revolt", "Failed to edit message");
+    npmlog.error("Discord", e);
+  }
+}
+
+/**
+ * Handle Discord message delete and delete the relevant message in Revolt
+ * @param revolt Revolt client
+ * @param messageId Deleted Discord message ID
+ */
+export async function handleDiscordMessageDelete(
+  revolt: RevoltClient,
+  messageId: string
+) {
+  const cachedMessage = Main.discordCache.find(
+    (cached) => cached.parentMessage === messageId
+  );
+
+  if (cachedMessage) {
+    try {
+      const target = Main.mappings.find(
+        (mapping) => mapping.discord === cachedMessage.channelId
+      );
+
+      if (target) {
+        const channel = await revolt.channels.get(target.revolt);
+        const messageToDelete = await channel.fetchMessage(cachedMessage.createdMessage);
+
+        await messageToDelete.delete();
+
+        // TODO remove from cache
+      }
+    } catch (e) {
+      npmlog.error("Revolt", "Failed to delete message");
+      npmlog.error("Revolt", e);
+    }
   }
 }
 

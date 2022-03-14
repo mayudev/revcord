@@ -4,14 +4,19 @@ import { REST } from "@discordjs/rest";
 import npmlog from "npmlog";
 
 import { Main } from "./Main";
-import { handleDiscordMessage, initiateDiscordChannel } from "./discord";
+import {
+  handleDiscordMessage,
+  handleDiscordMessageDelete,
+  handleDiscordMessageUpdate,
+  initiateDiscordChannel,
+} from "./discord";
 import {
   handleRevoltMessage,
   handleRevoltMessageDelete,
   handleRevoltMessageUpdate,
 } from "./revolt";
 import { registerSlashCommands } from "./discord/slash";
-import { DiscordCommand, RevoltCommand } from "./interfaces";
+import { DiscordCommand, PartialDiscordMessage, RevoltCommand } from "./interfaces";
 import { slashCommands } from "./discord/commands";
 import UniversalExecutor from "./universalExecutor";
 import { revoltCommands } from "./revolt/commands";
@@ -102,6 +107,26 @@ export class Bot {
     this.discord.on("messageCreate", (message) =>
       handleDiscordMessage(this.revolt, message)
     );
+
+    this.discord.on("messageUpdate", (oldMessage, newMessage) => {
+      if (oldMessage.author.bot) return;
+
+      const partialMessage: PartialDiscordMessage = {
+        author: oldMessage.author,
+        attachments: oldMessage.attachments,
+        channelId: oldMessage.channelId,
+        content: newMessage.content,
+        id: newMessage.id,
+      };
+
+      handleDiscordMessageUpdate(this.revolt, partialMessage);
+    });
+
+    this.discord.on("messageDelete", (message) => {
+      if (message.author.bot) return;
+
+      handleDiscordMessageDelete(this.revolt, message.id);
+    });
 
     this.discord.login(process.env.DISCORD_TOKEN);
   }

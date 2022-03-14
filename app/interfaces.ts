@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
-import { CommandInteraction, Interaction } from "discord.js";
+import { Collection, CommandInteraction, MessageAttachment, User } from "discord.js";
 import { Message } from "revolt.js/dist/maps/Messages";
 import UniversalExecutor from "./universalExecutor";
 
@@ -37,4 +37,12 @@ export interface CachedMessage {
 
   /** ID of the channel the original message was sent in */
   channelId: string;
+}
+
+export interface PartialDiscordMessage {
+  author: User;
+  attachments: Collection<string, MessageAttachment>;
+  channelId: string;
+  content: string;
+  id: string;
 }
