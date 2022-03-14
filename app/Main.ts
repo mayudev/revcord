@@ -4,14 +4,19 @@ import npmlog from "npmlog";
 import { DataTypes, Sequelize } from "sequelize";
 
 import { Bot } from "./Bot";
-import { Mapping } from "./interfaces";
+import { CachedMessage, Mapping } from "./interfaces";
 import { MappingModel } from "./models/Mapping";
 import getMappings from "./util/mappings";
 
 export class Main {
-  static db;
   static mappings: Mapping[];
   static webhooks: Webhook[];
+
+  /** Cache of messages sent by the bot from Discord to Revolt */
+  static discordCache: CachedMessage[];
+
+  /** Cache of messages sent by the bot from Revolt to Discord */
+  static revoltCache: CachedMessage[];
 
   private bot: Bot;
 
@@ -26,6 +31,9 @@ export class Main {
     }
 
     Main.webhooks = [];
+
+    Main.discordCache = [];
+    Main.revoltCache = [];
   }
 
   /**

@@ -5,7 +5,11 @@ import npmlog from "npmlog";
 
 import { Main } from "./Main";
 import { handleDiscordMessage, initiateDiscordChannel } from "./discord";
-import { handleRevoltMessage } from "./revolt";
+import {
+  handleRevoltMessage,
+  handleRevoltMessageDelete,
+  handleRevoltMessageUpdate,
+} from "./revolt";
 import { registerSlashCommands } from "./discord/slash";
 import { DiscordCommand, RevoltCommand } from "./interfaces";
 import { slashCommands } from "./discord/commands";
@@ -159,6 +163,18 @@ export class Bot {
       } else {
         handleRevoltMessage(this.discord, this.revolt, message);
       }
+    });
+
+    this.revolt.on("message/update", async (message) => {
+      if (message.author.bot !== null) return;
+
+      if (typeof message.content != "string") return;
+
+      handleRevoltMessageUpdate(this.revolt, message);
+    });
+
+    this.revolt.on("message/delete", async (id) => {
+      handleRevoltMessageDelete(this.revolt, id);
     });
 
     this.revolt.loginBot(process.env.REVOLT_TOKEN);

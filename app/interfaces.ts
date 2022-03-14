@@ -27,3 +27,14 @@ export interface RevoltCommand {
 }
 
 export interface ConnectionPair extends Mapping {}
+
+export interface CachedMessage {
+  /** ID of the original message */
+  parentMessage: string;
+
+  /** ID of the message sent by the bot */
+  createdMessage: string;
+
+  /** ID of the channel the original message was sent in */
+  channelId: string;
+}
