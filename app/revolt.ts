@@ -91,6 +91,11 @@ export function handleRevoltMessage(
   }
 }
 
+/**
+ * Handle Revolt message update and update the relevant message in Discord
+ * @param revolt Revolt client
+ * @param message Discord message object
+ */
 export async function handleRevoltMessageUpdate(revolt: RevoltClient, message: Message) {
   // Find target Discord channel
   const target = Main.mappings.find((mapping) => mapping.revolt === message.channel_id);
@@ -121,6 +126,11 @@ export async function handleRevoltMessageUpdate(revolt: RevoltClient, message: M
   }
 }
 
+/**
+ * Handle Revolt message delete and delete the relevant message in Discord
+ * @param revolt Revolt client
+ * @param messageId Deleted Revolt message ID
+ */
 export async function handleRevoltMessageDelete(revolt: RevoltClient, messageId: string) {
   // Find target Discord channel
   const cachedMessage = Main.revoltCache.find(
