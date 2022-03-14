@@ -11,16 +11,24 @@ import { Main } from "./Main";
 import { Mapping, PartialDiscordMessage } from "./interfaces";
 
 /**
+ * This file contains code taking care of things from Discord to Revolt
+ * Discord => Revolt
+ * and so uses Main.discordCache
+ */
+
+/**
  * Format a Discord message with all attachments to Revolt-friendly format
  * @param attachments message.attachments
  * @param content message.content
+ * @param ping ID of the user to ping
  * @returns Formatted string
  */
 function formatMessage(
   attachments: Collection<string, MessageAttachment>,
-  content: string
+  content: string,
+  ping?: string
 ) {
-  let messageString = "";
+  let messageString = ping ? "<@" + ping + "> " : "";
   messageString += content + "\n";
 
   attachments.forEach((attachment) => {
@@ -48,7 +56,25 @@ export async function handleDiscordMessage(revolt: RevoltClient, message: Messag
         avatar: message.author.avatarURL(),
       };
 
-      const messageString = formatMessage(message.attachments, message.content);
+      // Handle replies
+      const reply_id = message.reference;
+      let replyPing;
+
+      if (reply_id) {
+        const reference = Main.revoltCache.find(
+          (cached) => cached.createdMessage === reply_id.messageId
+        );
+
+        if (reference) {
+          replyPing = reference.parentAuthor;
+        }
+      }
+
+      const messageString = formatMessage(
+        message.attachments,
+        message.content,
+        replyPing
+      );
 
       // revolt.js doesn't support masquerade yet, but we can use them using this messy trick.
       const sentMessage = await revolt.channels.get(target.revolt).sendMessage({
