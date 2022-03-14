@@ -6,7 +6,9 @@ An easy to setup bridge for Discord and Revolt (an awesome open source Discord-i
 ## Features
 - [x] Bridge messages between platforms
 - [x] Bridge attachments
-- [x] Display user information
+- [x] Bridge replies
+- [x] Bridge message edit and delete 
+- [x] Seamlessly display user information
 
 ![Screenshot - Revolt](ss1.png) ![Screenshot - Discord](ss2.png)
 
@@ -48,11 +50,28 @@ node --experimental-specifier-resolution=node build/index.js
 
 On Revolt: Add a role with the `Masquerade` permission to the bot.
 
-On Discord: Make sure the bot has the `Manage Webhooks` permission. It will warn you if you don't (it just won't work without it).
+On Discord: Make sure the bot has the `Manage Webhooks` permission and the ability to use slash commands. It will warn you if you don't (it just won't work without it).
 
 ## Configuration
 
-### with mappings.json
+### with commands
+
+You can use either slash commands on Discord or rc! prefix on Revolt (use rc!help to show all commands)
+
+You need the `Administrator` permission on Discord or be the server owner in Revolt to use those commands.
+
+#### Connecting a Discord and Revolt channel
+**From Discord**: Use the `/connect <Revolt channel name or ID>` command
+
+**From Revolt**: Use the `rc!connect <Discord channel name or ID>` command
+
+#### Removing the connection
+Just call either `/disconnect` in the connected Discord channel or `rc!disconnect` in Revolt.
+
+#### Showing connections
+You can show current connections by calling `/connections` in Discord or `rc!connections` in Revolt.
+
+### with mappings.json (not recommended)
 1. Create a `mappings.json` file in the root directory.
 2. Use the following format:
 ```json
