@@ -14,10 +14,11 @@ import { Main } from "./Main";
  * Format a Revolt message with all attachments to Discord-friendly format
  * @param revolt Revolt client
  * @param message Revolt message object
+ * @param ping ID of the user to ping
  * @returns Formatted string
  */
-function formatMessage(revolt: RevoltClient, message: Message) {
-  let messageString = "";
+function formatMessage(revolt: RevoltClient, message: Message, ping?: string) {
+  let messageString = ping ? "<@" + ping + "> " : "";
   messageString += message.content.toString() + "\n";
 
   if (message.attachments !== null) {
@@ -58,7 +59,21 @@ export function handleRevoltMessage(
               throw new Error("No webhook in channel Discord#" + channel.name);
             }
 
-            let messageString = formatMessage(revolt, message);
+            // Handle replies
+            const reply_ids = message.reply_ids;
+            let replyPing;
+
+            if (reply_ids) {
+              const reference = Main.discordCache.find(
+                (cached) => cached.createdMessage === reply_ids[0]
+              );
+
+              if (reference) {
+                replyPing = reference.parentAuthor;
+              }
+            }
+
+            let messageString = formatMessage(revolt, message, replyPing);
 
             webhook
               .send({
@@ -69,6 +84,7 @@ export function handleRevoltMessage(
               .then((webhookMessage) => {
                 Main.revoltCache.push({
                   parentMessage: message._id,
+                  parentAuthor: message.author_id,
                   createdMessage: webhookMessage.id,
                   channelId: message.channel_id,
                 });

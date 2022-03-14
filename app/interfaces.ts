@@ -29,8 +29,14 @@ export interface RevoltCommand {
 export interface ConnectionPair extends Mapping {}
 
 export interface CachedMessage {
-  /** ID of the original message */
+  /** ID of the original message
+   *
+   * Tip: if it's discordCache, parent is the Discord message.
+   */
   parentMessage: string;
+
+  /** ID of the author of the original message */
+  parentAuthor: string;
 
   /** ID of the message sent by the bot */
   createdMessage: string;

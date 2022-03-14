@@ -7,7 +7,6 @@ import {
 } from "discord.js";
 import npmlog from "npmlog";
 import { Client as RevoltClient } from "revolt.js";
-import { Client as DiscordClient } from "discord.js";
 import { Main } from "./Main";
 import { Mapping, PartialDiscordMessage } from "./interfaces";
 
@@ -60,6 +59,7 @@ export async function handleDiscordMessage(revolt: RevoltClient, message: Messag
       // Save in cache
       Main.discordCache.push({
         parentMessage: message.id,
+        parentAuthor: message.author.id,
         createdMessage: sentMessage._id,
         channelId: target.discord,
       });
