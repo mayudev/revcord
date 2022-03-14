@@ -25,10 +25,9 @@ import { Mapping, PartialDiscordMessage } from "./interfaces";
  */
 function formatMessage(
   attachments: Collection<string, MessageAttachment>,
-  content: string,
-  ping?: string
+  content: string
 ) {
-  let messageString = ping ? "<@" + ping + "> " : "";
+  let messageString = "";
   messageString += content + "\n";
 
   attachments.forEach((attachment) => {
@@ -66,20 +65,24 @@ export async function handleDiscordMessage(revolt: RevoltClient, message: Messag
         );
 
         if (reference) {
-          replyPing = reference.parentAuthor;
+          replyPing = reference.parentMessage;
         }
       }
 
-      const messageString = formatMessage(
-        message.attachments,
-        message.content,
-        replyPing
-      );
+      const messageString = formatMessage(message.attachments, message.content);
 
       // revolt.js doesn't support masquerade yet, but we can use them using this messy trick.
       const sentMessage = await revolt.channels.get(target.revolt).sendMessage({
         content: messageString,
         masquerade: mask,
+        replies: replyPing
+          ? [
+              {
+                id: replyPing,
+                mention: false,
+              },
+            ]
+          : [],
       } as any);
 
       // Save in cache
