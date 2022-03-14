@@ -128,7 +128,21 @@ export async function handleRevoltMessageUpdate(revolt: RevoltClient, message: M
         );
 
         if (webhook) {
-          const messageString = formatMessage(revolt, message);
+          // Handle replies
+          const reply_ids = message.reply_ids;
+          let replyPing;
+
+          if (reply_ids) {
+            const reference = Main.discordCache.find(
+              (cached) => cached.createdMessage === reply_ids[0]
+            );
+
+            if (reference) {
+              replyPing = reference.parentAuthor;
+            }
+          }
+
+          const messageString = formatMessage(revolt, message, replyPing);
 
           await webhook.editMessage(cachedMessage.createdMessage, {
             content: messageString,
