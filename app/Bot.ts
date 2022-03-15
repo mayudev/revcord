@@ -25,6 +25,8 @@ export class Bot {
   private discord: DiscordClient;
   private revolt: RevoltClient;
   private commands: Collection<string, DiscordCommand>;
+  private rest: REST;
+  private commandsJson: any;
   // ah yes, using discord.js collections for revolt commands
   private revoltCommands: Collection<string, RevoltCommand>;
   private executor: UniversalExecutor;
@@ -51,7 +53,7 @@ export class Bot {
       );
 
       // Register slash commands
-      const rest = new REST({ version: "9" }).setToken(process.env.DISCORD_TOKEN);
+      this.rest = new REST({ version: "9" }).setToken(process.env.DISCORD_TOKEN);
 
       this.executor = new UniversalExecutor(this.discord, this.revolt);
 
@@ -64,13 +66,13 @@ export class Bot {
       });
 
       // Convert commands into REST-friendly format
-      let commandsJson = this.commands.map((command) => command.data.toJSON());
+      this.commandsJson = this.commands.map((command) => command.data.toJSON());
 
       // Do not allow commands when using mappings.json mode.
       if (!this.usingJsonMappings) {
         // Register commands for each guild
         this.discord.guilds.cache.forEach((guild) => {
-          registerSlashCommands(rest, this.discord, guild.id, <any>commandsJson);
+          registerSlashCommands(this.rest, this.discord, guild.id, this.commandsJson);
         });
       }
 
@@ -101,6 +103,13 @@ export class Bot {
       } catch (e) {
         npmlog.error("Discord", "Error while executing slash command");
         npmlog.error("Discord", e);
+      }
+    });
+
+    this.discord.on("guildCreate", (guild) => {
+      if (!this.usingJsonMappings) {
+        // Register slash commands in newly added server
+        registerSlashCommands(this.rest, this.discord, guild.id, this.commandsJson);
       }
     });
 
