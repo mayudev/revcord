@@ -9,6 +9,7 @@ import npmlog from "npmlog";
 import { Client as RevoltClient } from "revolt.js";
 import { Main } from "./Main";
 import { Mapping, PartialDiscordMessage } from "./interfaces";
+import { DiscordEmojiPattern } from "./util/regex";
 
 /**
  * This file contains code taking care of things from Discord to Revolt
@@ -29,6 +30,26 @@ function formatMessage(
   stickerUrl?: string
 ) {
   let messageString = "";
+
+  // Handle emojis
+  const emojis = content.match(DiscordEmojiPattern);
+  if (emojis) {
+    emojis.forEach((emoji) => {
+      const dissected = DiscordEmojiPattern.exec(emoji);
+
+      // reset internal pointer... what is that even
+      DiscordEmojiPattern.lastIndex = 0;
+
+      if (dissected !== null) {
+        const emojiName = dissected.groups["name"];
+        const emojiId = dissected.groups["id"];
+        if (emojiName && emojiId) {
+          content = content.replace(emoji, `[:${emojiName}:]()`);
+        }
+      }
+    });
+  }
+
   messageString += content + "\n";
 
   attachments.forEach((attachment) => {
