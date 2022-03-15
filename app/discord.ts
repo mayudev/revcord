@@ -63,12 +63,20 @@ export async function handleDiscordMessage(revolt: RevoltClient, message: Messag
       let replyPing;
 
       if (reply_id) {
-        const reference = Main.revoltCache.find(
+        const crossPlatformReference = Main.revoltCache.find(
           (cached) => cached.createdMessage === reply_id.messageId
         );
 
-        if (reference) {
-          replyPing = reference.parentMessage;
+        if (crossPlatformReference) {
+          replyPing = crossPlatformReference.parentMessage;
+        } else {
+          const samePlatformReference = Main.discordCache.find(
+            (cached) => cached.parentMessage === reply_id.messageId
+          );
+
+          if (samePlatformReference) {
+            replyPing = samePlatformReference.createdMessage;
+          }
         }
       }
 
