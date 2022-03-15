@@ -1,7 +1,8 @@
-import { Client as DiscordClient, TextChannel } from "discord.js";
+import { Client as DiscordClient, MessageEmbed, TextChannel } from "discord.js";
 import npmlog from "npmlog";
 import { Client as RevoltClient } from "revolt.js";
 import { Message } from "revolt.js/dist/maps/Messages";
+import { AttachmentType } from "./interfaces";
 import { Main } from "./Main";
 
 /**
@@ -9,6 +10,15 @@ import { Main } from "./Main";
  * Revolt => Discord
  * and so uses Main.revoltCache
  */
+
+interface ReplyObject {
+  pingable: boolean;
+  entity?: string;
+  entityImage?: string;
+  originalUrl?: string;
+  content: string;
+  attachments: AttachmentType[];
+}
 
 /**
  * Format a Revolt message with all attachments to Discord-friendly format
@@ -36,7 +46,7 @@ function formatMessage(revolt: RevoltClient, message: Message, ping?: string) {
  * @param revolt Revolt client
  * @param message Revolt message object
  */
-export function handleRevoltMessage(
+export async function handleRevoltMessage(
   discord: DiscordClient,
   revolt: RevoltClient,
   message: Message
@@ -46,64 +56,127 @@ export function handleRevoltMessage(
     const target = Main.mappings.find((mapping) => mapping.revolt === message.channel_id);
 
     if (target) {
-      const channel = discord.channels.fetch(target.discord);
+      const channel = await discord.channels.fetch(target.discord);
 
-      channel
-        .then((channel) => {
-          if (channel instanceof TextChannel) {
-            const webhook = Main.webhooks.find(
-              (webhook) => webhook.name === "revcord-" + target.revolt
+      if (channel instanceof TextChannel) {
+        const webhook = Main.webhooks.find(
+          (webhook) => webhook.name === "revcord-" + target.revolt
+        );
+
+        if (!webhook) {
+          throw new Error("No webhook in channel Discord#" + channel.name);
+        }
+
+        // Handle replies
+        const reply_ids = message.reply_ids;
+        let reply: ReplyObject;
+
+        if (reply_ids) {
+          const crossPlatformReference = Main.discordCache.find(
+            (cached) => cached.createdMessage === reply_ids[0]
+          );
+
+          if (crossPlatformReference) {
+            // Find Discord message that's being replied to
+            const referencedMessage = await channel.messages.fetch(
+              crossPlatformReference.parentMessage
             );
 
-            if (!webhook) {
-              throw new Error("No webhook in channel Discord#" + channel.name);
+            // Parse attachments
+            let attachments: AttachmentType[] = [];
+
+            if (referencedMessage.attachments.first()) {
+              attachments.push("file");
             }
 
-            // Handle replies
-            const reply_ids = message.reply_ids;
-            let replyPing;
+            if (referencedMessage.embeds.length > 0) {
+              attachments.push("embed");
+            }
 
-            if (reply_ids) {
-              const reference = Main.discordCache.find(
-                (cached) => cached.createdMessage === reply_ids[0]
-              );
+            const replyObject: ReplyObject = {
+              pingable: false,
+              entity:
+                referencedMessage.author.username +
+                "#" +
+                referencedMessage.author.discriminator,
+              entityImage: referencedMessage.author.avatarURL(),
+              content: referencedMessage.content,
+              originalUrl: referencedMessage.url,
+              attachments: attachments ? attachments : [],
+            };
 
-              if (reference) {
-                replyPing = reference.parentAuthor;
+            reply = replyObject;
+          } else {
+            try {
+              const channel = revolt.channels.get(target.revolt);
+              const message = await channel.fetchMessage(reply_ids[0]);
+
+              // Parse attachments
+              let attachments: AttachmentType[] = [];
+
+              if (message.attachments !== null) {
+                attachments.push("file");
               }
-            }
 
-            let messageString = formatMessage(revolt, message, replyPing);
+              const replyObject: ReplyObject = {
+                pingable: false,
+                entity: message.author.username,
+                entityImage: message.author.generateAvatarURL({ size: 64 }),
+                content: message.content.toString(),
+                attachments: attachments ? attachments : [],
+              };
 
-            webhook
-              .send({
-                content: messageString,
-                username: message.author.username,
-                avatarURL: message.author.generateAvatarURL({}, true),
-              })
-              .then((webhookMessage) => {
-                Main.revoltCache.push({
-                  parentMessage: message._id,
-                  parentAuthor: message.author_id,
-                  createdMessage: webhookMessage.id,
-                  channelId: message.channel_id,
-                });
-              })
-              .catch((e) => {
-                npmlog.error("Discord", "A webhook error occured.");
-                npmlog.error("Discord", e);
-              });
+              reply = replyObject;
+            } catch {}
           }
-        })
-        .catch((e) => {
-          npmlog.error(
-            "Discord",
-            "Couldn't find the webhook. Restart the bot to rebuild webhook database. Permissions might be missing as well."
-          );
+        }
+
+        let messageString = formatMessage(revolt, message);
+
+        let embed =
+          reply &&
+          new MessageEmbed()
+            .setColor("#5875e8")
+            .setAuthor({ name: reply.entity, iconURL: reply.entityImage });
+
+        // Add original message URL and content
+        if (reply && reply.content) {
+          if (reply.originalUrl) {
+            embed?.setDescription(
+              `[**Reply to:**](${reply.originalUrl}) ` + reply.content
+            );
+          } else {
+            embed?.setDescription(`**Reply to**: ` + reply.content);
+          }
+        } else if (reply && reply.originalUrl) {
+          embed?.setDescription(`[**Reply to**](${reply.originalUrl})`);
+        }
+
+        // Add attachments field
+        if (reply && reply.attachments.length > 0) {
+          embed?.setFooter({
+            text: "contains " + reply.attachments.map((a) => a + " "),
+          });
+        }
+
+        const webhookMessage = await webhook.send({
+          content: messageString,
+          username: message.author.username,
+          avatarURL: message.author.generateAvatarURL({}, true),
+          embeds: embed ? [embed] : [],
         });
+
+        Main.revoltCache.push({
+          parentMessage: message._id,
+          parentAuthor: message.author_id,
+          createdMessage: webhookMessage.id,
+          channelId: message.channel_id,
+        });
+      }
     }
   } catch (e) {
-    npmlog.error("Discord", "Couldn't send a message to Discord", e);
+    npmlog.error("Discord", "Couldn't send a message to Discord");
+    npmlog.error("Discord", e);
   }
 }
 

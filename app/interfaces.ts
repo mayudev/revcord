@@ -52,3 +52,5 @@ export interface PartialDiscordMessage {
   content: string;
   id: string;
 }
+
+export type AttachmentType = "embed" | "file";
