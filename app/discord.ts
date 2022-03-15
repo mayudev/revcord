@@ -25,7 +25,8 @@ import { Mapping, PartialDiscordMessage } from "./interfaces";
  */
 function formatMessage(
   attachments: Collection<string, MessageAttachment>,
-  content: string
+  content: string,
+  stickerUrl?: string
 ) {
   let messageString = "";
   messageString += content + "\n";
@@ -33,6 +34,8 @@ function formatMessage(
   attachments.forEach((attachment) => {
     messageString += attachment.url + "\n";
   });
+
+  if (stickerUrl) messageString += stickerUrl + "\n";
 
   return messageString;
 }
@@ -69,7 +72,15 @@ export async function handleDiscordMessage(revolt: RevoltClient, message: Messag
         }
       }
 
-      const messageString = formatMessage(message.attachments, message.content);
+      // Sticker
+      const sticker = message.stickers.first();
+      let stickerUrl = sticker && sticker.url;
+
+      const messageString = formatMessage(
+        message.attachments,
+        message.content,
+        stickerUrl
+      );
 
       // revolt.js doesn't support masquerade yet, but we can use them using this messy trick.
       const sentMessage = await revolt.channels.get(target.revolt).sendMessage({
