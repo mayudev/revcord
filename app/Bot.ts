@@ -117,6 +117,7 @@ export class Bot {
         channelId: oldMessage.channelId,
         content: newMessage.content,
         id: newMessage.id,
+        mentions: newMessage.mentions,
       };
 
       handleDiscordMessageUpdate(this.revolt, partialMessage);

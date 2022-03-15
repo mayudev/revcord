@@ -3,13 +3,14 @@ import {
   Collection,
   Message,
   MessageAttachment,
+  MessageMentions,
   TextChannel,
 } from "discord.js";
 import npmlog from "npmlog";
 import { Client as RevoltClient } from "revolt.js";
 import { Main } from "./Main";
 import { Mapping, PartialDiscordMessage } from "./interfaces";
-import { DiscordEmojiPattern } from "./util/regex";
+import { DiscordEmojiPattern, DiscordPingPattern } from "./util/regex";
 
 /**
  * This file contains code taking care of things from Discord to Revolt
@@ -27,6 +28,7 @@ import { DiscordEmojiPattern } from "./util/regex";
 function formatMessage(
   attachments: Collection<string, MessageAttachment>,
   content: string,
+  mentions: MessageMentions,
   stickerUrl?: string
 ) {
   let messageString = "";
@@ -48,6 +50,21 @@ function formatMessage(
         }
       }
     });
+  }
+
+  // Handle pings
+  const pings = content.match(DiscordPingPattern);
+  if (pings) {
+    for (const [index, ping] of pings.entries()) {
+      const match = mentions.members.at(index);
+
+      if (match) {
+        content = content.replace(
+          ping,
+          `[@${match.user.username}#${match.user.discriminator}]()`
+        );
+      }
+    }
   }
 
   messageString += content + "\n";
@@ -108,6 +125,7 @@ export async function handleDiscordMessage(revolt: RevoltClient, message: Messag
       const messageString = formatMessage(
         message.attachments,
         message.content,
+        message.mentions,
         stickerUrl
       );
 
@@ -157,7 +175,11 @@ export async function handleDiscordMessageUpdate(
       );
 
       if (cachedMessage) {
-        const messageString = formatMessage(message.attachments, message.content);
+        const messageString = formatMessage(
+          message.attachments,
+          message.content,
+          message.mentions
+        );
 
         const channel = await revolt.channels.get(target.revolt);
         const messageToEdit = await channel.fetchMessage(cachedMessage.createdMessage);

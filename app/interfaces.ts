@@ -1,5 +1,11 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
-import { Collection, CommandInteraction, MessageAttachment, User } from "discord.js";
+import {
+  Collection,
+  CommandInteraction,
+  MessageAttachment,
+  MessageMentions,
+  User,
+} from "discord.js";
 import { Message } from "revolt.js/dist/maps/Messages";
 import UniversalExecutor from "./universalExecutor";
 
@@ -51,6 +57,7 @@ export interface PartialDiscordMessage {
   channelId: string;
   content: string;
   id: string;
+  mentions: MessageMentions;
 }
 
 export type AttachmentType = "embed" | "file";
