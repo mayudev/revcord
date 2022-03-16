@@ -4,6 +4,7 @@ import { Client as RevoltClient } from "revolt.js";
 import { Message } from "revolt.js/dist/maps/Messages";
 import { AttachmentType } from "./interfaces";
 import { Main } from "./Main";
+import { RevoltPingPattern } from "./util/regex";
 
 /**
  * This file contains code taking care of things from Revolt to Discord
@@ -27,10 +28,24 @@ interface ReplyObject {
  * @param ping ID of the user to ping
  * @returns Formatted string
  */
-function formatMessage(revolt: RevoltClient, message: Message, ping?: string) {
-  let messageString = ping ? "<@" + ping + "> " : "";
-  messageString += message.content.toString() + "\n";
+function formatMessage(revolt: RevoltClient, message: Message) {
+  let messageString = "";
+  let content = message.content.toString();
 
+  const pings = content.match(RevoltPingPattern);
+  if (pings && message.mentions) {
+    for (const [index, ping] of pings.entries()) {
+      const match = message.mentions.at(index);
+
+      if (match) {
+        content = content.replace(ping, `[@${match.username}]`);
+      }
+    }
+  }
+
+  messageString += content + "\n";
+
+  // Handle pings
   if (message.attachments !== null) {
     message.attachments.forEach((attachment) => {
       messageString += revolt.generateFileURL(attachment) + "\n";
@@ -201,21 +216,7 @@ export async function handleRevoltMessageUpdate(revolt: RevoltClient, message: M
         );
 
         if (webhook) {
-          // Handle replies
-          const reply_ids = message.reply_ids;
-          let replyPing;
-
-          if (reply_ids) {
-            const reference = Main.discordCache.find(
-              (cached) => cached.createdMessage === reply_ids[0]
-            );
-
-            if (reference) {
-              replyPing = reference.parentAuthor;
-            }
-          }
-
-          const messageString = formatMessage(revolt, message, replyPing);
+          const messageString = formatMessage(revolt, message);
 
           await webhook.editMessage(cachedMessage.createdMessage, {
             content: messageString,
