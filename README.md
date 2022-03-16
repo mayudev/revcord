@@ -1,75 +1,118 @@
-# revcord
+<p align="center">
+  <img src="docs/revcord.png" width="64px" />
+</p>
 
-(WIP)
-An easy to setup bridge for Discord and Revolt (an awesome open source Discord-inspired chat app).
+<h1 align="center">revcord</h1>
+<p align="center">
+  <img src="https://img.shields.io/github/v/release/mayudev/revcord?style=for-the-badge">
+  <img src="https://img.shields.io/github/license/mayudev/revcord?style=for-the-badge">
+  <img src="https://img.shields.io/github/languages/top/mayudev/revcord?style=for-the-badge">
+</p>
 
-## Features
+<p align="center"><b>🌉 A cord to connect your Revolt and Discord servers</b></p>
+
+🔗 A bridge for Discord and [Revolt](https://revolt.chat) with easy setup through commands, written in TypeScript using [revolt.js](https://github.com/revoltchat/revolt.js).
+
+## 📔 Features
 - [x] Bridge messages between platforms
 - [x] Bridge attachments
 - [x] Bridge replies
-- [x] Bridge message edit and delete 
+- [x] Bridge message edit and delete
+- [x] Bridge embeds
 - [x] Seamlessly display user information
 
-![Screenshot - Revolt](ss1.png) ![Screenshot - Discord](ss2.png)
+![Screenshot - Revolt](docs/discord.png) ![Screenshot - Discord](docs/revolt.png)
 
-## Setup
+## 🔩 Setup
 
-Important: this bot is meant to be used in one server (Discord+Revolt), but can be used in few as long as they share the same admin.
+It's recommended to have the latest version of Node.js (v16)
 
-1. Clone this repository
+Important: this bot is meant to be used in one server (Discord+Revolt), but can be used in more as long as they share the same admin.
+
+1. Clone this repository, install dependencies and build
 ```sh
 git clone https://github.com/mayudev/revcord
 cd revcord
-```
-2. Install dependencies
-```sh
 npm install
+npm run build
 ```
-3. Create a bot in Discord ([Guide](https://discordjs.guide/preparations/setting-up-a-bot-application.html#creating-your-bot)) and Revolt (Open user settings -> `My bots` -> `Create a bot` -> Name it however you want -> Done.)
-4. Revcord uses environment variables to store tokens. The easiest way is to create a `.env` file (yes, a file called `.env`):
+2. Create a bot in Discord ([Guide](https://discordjs.guide/preparations/setting-up-a-bot-application.html#creating-your-bot)) and Revolt (Open user settings -> `My Bots` -> `Create a bot`)
+3. Place the relevant tokens in environment variables. The easiest way is to create a `.env` file (yes, a file called `.env`):
 ```
 DISCORD_TOKEN = ...
 REVOLT_TOKEN = ...
 ```
 Of course, replace ... with tokens.
 
-5. Build the bot
-```
-npm run build
-```
-6. Apply configuation (see below)
-7. Run the bot
+4. **Important!** Make sure to select the following permissions in URL Generator when making an invite for your bot (Your bot in Discord Developers -> `OAuth2` -> `URL Generator`) (or if you're lazy, just select `Administrator`) Note **applications.commands**!
    
-You have to use this weird command because of `revolt.js` stuff. I'm going to make it easier in the future.
-```
-node --experimental-specifier-resolution=node build/index.js
-```
-8. Invite the bot to a Revolt and Discord server
-   
-**Important** Make sure the bot can, obviously, read and send messages on both platforms. Moreover:
+![permissions](docs/permissions.png)
 
-On Revolt: Add a role with the `Masquerade` permission to the bot.
+5. **Important!** On Revolt, make sure to add the bot to a role that has the **Masquerade** permission!
 
-On Discord: Make sure the bot has the `Manage Webhooks` permission and the ability to use slash commands. It will warn you if you don't (it just won't work without it).
+![revolt permissions](docs/mask.png)
 
-## Configuration
+6. Invite the bot to to a Revolt and Discord server.
+7. Start the bot using `npm start`.
+
+## 🔧 Configuration
 
 ### with commands
 
-You can use either slash commands on Discord or rc! prefix on Revolt (use rc!help to show all commands)
+You can use either slash commands on Discord or `rc!` prefix on Revolt (use `rc!help` to show all commands)
 
-You need the `Administrator` permission on Discord or be the server owner in Revolt to use those commands.
+To use the commands, **you** need the `Administrator` permission on Discord. On Revolt, only the server owner can run them (for now).
 
-#### Connecting a Discord and Revolt channel
-**From Discord**: Use the `/connect <Revolt channel name or ID>` command
+1. Connecting Discord and Revolt channels 
 
-**From Revolt**: Use the `rc!connect <Discord channel name or ID>` command
+From **Discord**:
+```
+/connect <Revolt channel name or ID>
+```
 
-#### Removing the connection
-Just call either `/disconnect` in the connected Discord channel or `rc!disconnect` in Revolt.
+From **Revolt**:
+```
+rc!connect <Discord channel name or ID>
+```
 
-#### Showing connections
-You can show current connections by calling `/connections` in Discord or `rc!connections` in Revolt.
+For example:
+```
+# From Discord
+/connect lounge
+/connect 01AB23BC34CD56DE78ZX90WWDB
+
+# From Revolt
+rc!connect general
+rc!connect 591234567890123456
+```
+
+✔️ Send a message to see if it works. Try editing and deleting it.
+
+2. Removing the connection
+
+From **Discord**:
+```
+/disconnect
+```
+
+From **Revolt**:
+```
+rc!disconnect
+```
+
+You don't have to specify any channel. It will disconnect the channel the command is sent in.
+
+3. Showing connections
+
+From **Discord**:
+```
+/connections
+```
+
+From **Revolt**:
+```
+rc!connections
+```
 
 ### with mappings.json (not recommended)
 1. Create a `mappings.json` file in the root directory.
