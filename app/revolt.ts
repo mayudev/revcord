@@ -4,7 +4,7 @@ import { Client as RevoltClient } from "revolt.js";
 import { Message } from "revolt.js/dist/maps/Messages";
 import { AttachmentType } from "./interfaces";
 import { Main } from "./Main";
-import { RevoltPingPattern } from "./util/regex";
+import { RevoltChannelPattern, RevoltPingPattern } from "./util/regex";
 
 /**
  * This file contains code taking care of things from Revolt to Discord
@@ -28,24 +28,44 @@ interface ReplyObject {
  * @param ping ID of the user to ping
  * @returns Formatted string
  */
-function formatMessage(revolt: RevoltClient, message: Message) {
+async function formatMessage(revolt: RevoltClient, message: Message) {
   let messageString = "";
   let content = message.content.toString();
 
+  // Handle pings
   const pings = content.match(RevoltPingPattern);
   if (pings && message.mentions) {
     for (const [index, ping] of pings.entries()) {
       const match = message.mentions.at(index);
 
       if (match) {
-        content = content.replace(ping, `[@${match.username}]`);
+        content = content.replace(ping, `@${match.username}`);
+      }
+    }
+  }
+
+  // Handle channel mentions
+  const channelMentions = content.match(RevoltChannelPattern);
+  if (channelMentions) {
+    for (const mention of channelMentions) {
+      const channel = RevoltChannelPattern.exec(mention);
+      RevoltChannelPattern.lastIndex = 0;
+
+      if (channel !== null) {
+        const channelId = channel.groups["id"];
+        if (channelId) {
+          try {
+            const channelData = await revolt.channels.fetch(channelId);
+            content = content.replace(mention, "#" + channelData.name);
+          } catch {}
+        }
       }
     }
   }
 
   messageString += content + "\n";
 
-  // Handle pings
+  // Handle attachments
   if (message.attachments !== null) {
     message.attachments.forEach((attachment) => {
       messageString += revolt.generateFileURL(attachment) + "\n";
@@ -146,7 +166,7 @@ export async function handleRevoltMessage(
           }
         }
 
-        let messageString = formatMessage(revolt, message);
+        let messageString = await formatMessage(revolt, message);
 
         let embed =
           reply &&
@@ -216,7 +236,7 @@ export async function handleRevoltMessageUpdate(revolt: RevoltClient, message: M
         );
 
         if (webhook) {
-          const messageString = formatMessage(revolt, message);
+          const messageString = await formatMessage(revolt, message);
 
           await webhook.editMessage(cachedMessage.createdMessage, {
             content: messageString,
