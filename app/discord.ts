@@ -111,7 +111,7 @@ export async function handleDiscordMessage(
   discord: DiscordClient,
   message: Message
 ) {
-  if (message.author.bot) return;
+  if (message.applicationId === discord.user.id) return;
 
   try {
     // Find target Revolt channel

@@ -118,7 +118,7 @@ export class Bot {
     );
 
     this.discord.on("messageUpdate", (oldMessage, newMessage) => {
-      if (oldMessage.author.bot) return;
+      if (oldMessage.applicationId === this.discord.user.id) return;
 
       const partialMessage: PartialDiscordMessage = {
         author: oldMessage.author,
@@ -133,7 +133,7 @@ export class Bot {
     });
 
     this.discord.on("messageDelete", (message) => {
-      if (message.author.bot) return;
+      if (message.applicationId === this.discord.user.id) return;
 
       handleDiscordMessageDelete(this.revolt, message.id);
     });
