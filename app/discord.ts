@@ -21,6 +21,7 @@ import {
   DiscordEmojiPattern,
   DiscordPingPattern,
 } from "./util/regex";
+import { translateDiscordEmbed } from "./util/embeds";
 
 /**
  * This file contains code taking care of things from Discord to Revolt
@@ -214,14 +215,20 @@ export async function handleDiscordMessage(
       } as any;
 
       if (replyEmbed) {
-        messageObject.embeds = [
-          {
-            type: "Text",
-            icon_url: replyEmbed.entityImage,
-            title: replyEmbed.entity,
-            description: `**Reply to**: ${replyEmbed.content}`,
-          },
-        ];
+        if (typeof messageObject.embeds === "undefined") messageObject.embeds = [];
+        messageObject.embeds.push({
+          type: "Text",
+          icon_url: replyEmbed.entityImage,
+          title: replyEmbed.entity,
+          description: `**Reply to**: ${replyEmbed.content}`,
+        });
+      }
+
+      // Translate embeds, if any
+      if (message.embeds.length) {
+        if (typeof messageObject.embeds === "undefined") messageObject.embeds = [];
+        const embed = translateDiscordEmbed(message.embeds[0]);
+        messageObject.embeds.push(embed);
       }
 
       const sentMessage = await revolt.channels
