@@ -60,4 +60,14 @@ export interface PartialDiscordMessage {
   mentions: MessageMentions;
 }
 
+export interface ReplyObject {
+  pingable: boolean;
+  entity?: string;
+  entityImage?: string;
+  originalUrl?: string;
+  content: string;
+  attachments: AttachmentType[];
+  previewAttachment?: string;
+}
+
 export type AttachmentType = "embed" | "file";

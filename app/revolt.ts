@@ -2,7 +2,7 @@ import { Client as DiscordClient, MessageEmbed, TextChannel } from "discord.js";
 import npmlog from "npmlog";
 import { Client as RevoltClient } from "revolt.js";
 import { Message } from "revolt.js/dist/maps/Messages";
-import { AttachmentType } from "./interfaces";
+import { AttachmentType, ReplyObject } from "./interfaces";
 import { Main } from "./Main";
 import { RevoltChannelPattern, RevoltPingPattern } from "./util/regex";
 
@@ -11,15 +11,6 @@ import { RevoltChannelPattern, RevoltPingPattern } from "./util/regex";
  * Revolt => Discord
  * and so uses Main.revoltCache
  */
-
-interface ReplyObject {
-  pingable: boolean;
-  entity?: string;
-  entityImage?: string;
-  originalUrl?: string;
-  content: string;
-  attachments: AttachmentType[];
-}
 
 /**
  * Format a Revolt message with all attachments to Discord-friendly format

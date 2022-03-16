@@ -1,5 +1,6 @@
 import {
   AnyChannel,
+  Client as DiscordClient,
   Collection,
   Message,
   MessageAttachment,
@@ -9,7 +10,12 @@ import {
 import npmlog from "npmlog";
 import { Client as RevoltClient } from "revolt.js";
 import { Main } from "./Main";
-import { Mapping, PartialDiscordMessage } from "./interfaces";
+import {
+  AttachmentType,
+  Mapping,
+  PartialDiscordMessage,
+  ReplyObject,
+} from "./interfaces";
 import {
   DiscordChannelPattern,
   DiscordEmojiPattern,
@@ -97,9 +103,14 @@ function formatMessage(
 /**
  * Find a relevant mapping and direct a Discord message to Revolt
  * @param revolt Revolt client
+ * @param discord Discord client
  * @param message Discord message object
  */
-export async function handleDiscordMessage(revolt: RevoltClient, message: Message) {
+export async function handleDiscordMessage(
+  revolt: RevoltClient,
+  discord: DiscordClient,
+  message: Message
+) {
   if (message.author.bot) return;
 
   try {
@@ -113,23 +124,66 @@ export async function handleDiscordMessage(revolt: RevoltClient, message: Messag
       };
 
       // Handle replies
-      const reply_id = message.reference;
+      const reference = message.reference;
       let replyPing;
 
-      if (reply_id) {
+      let replyEmbed: ReplyObject;
+
+      if (reference) {
         const crossPlatformReference = Main.revoltCache.find(
-          (cached) => cached.createdMessage === reply_id.messageId
+          (cached) => cached.createdMessage === reference.messageId
         );
 
         if (crossPlatformReference) {
           replyPing = crossPlatformReference.parentMessage;
         } else {
           const samePlatformReference = Main.discordCache.find(
-            (cached) => cached.parentMessage === reply_id.messageId
+            (cached) => cached.parentMessage === reference.messageId
           );
 
           if (samePlatformReference) {
             replyPing = samePlatformReference.createdMessage;
+          } else {
+            // Fallback - this happens when someone replies to a message
+            // that was sent before the bot was started
+
+            // Wrap in another try-catch since it may fail
+            // if the bot doesn't have permission to view message history
+            try {
+              // Fetch referenced message
+              const sourceChannel = await discord.channels.fetch(
+                message.reference.channelId
+              );
+
+              if (sourceChannel instanceof TextChannel) {
+                const referenced = await sourceChannel.messages.fetch(
+                  message.reference.messageId
+                );
+
+                // Prepare reply embed
+                const formattedContent = formatMessage(
+                  referenced.attachments,
+                  referenced.content,
+                  referenced.mentions
+                );
+
+                replyEmbed = {
+                  pingable: false,
+                  entity:
+                    referenced.author.username + "#" + referenced.author.discriminator,
+                  entityImage: referenced.author.avatarURL(),
+                  content: formattedContent,
+                  attachments: [],
+                };
+
+                if (referenced.attachments.first()) {
+                  replyEmbed.attachments.push("file");
+                  replyEmbed.previewAttachment = referenced.attachments.first().url;
+                }
+              }
+            } catch (e) {
+              npmlog.error("Discord", 'Bot lacks the "View message history" permission.');
+            }
           }
         }
       }
@@ -146,7 +200,7 @@ export async function handleDiscordMessage(revolt: RevoltClient, message: Messag
       );
 
       // revolt.js doesn't support masquerade yet, but we can use them using this messy trick.
-      const sentMessage = await revolt.channels.get(target.revolt).sendMessage({
+      const messageObject = {
         content: messageString,
         masquerade: mask,
         replies: replyPing
@@ -157,7 +211,22 @@ export async function handleDiscordMessage(revolt: RevoltClient, message: Messag
               },
             ]
           : [],
-      } as any);
+      } as any;
+
+      if (replyEmbed) {
+        messageObject.embeds = [
+          {
+            type: "Text",
+            icon_url: replyEmbed.entityImage,
+            title: replyEmbed.entity,
+            description: `**Reply to**: ${replyEmbed.content}`,
+          },
+        ];
+      }
+
+      const sentMessage = await revolt.channels
+        .get(target.revolt)
+        .sendMessage(messageObject);
 
       // Save in cache
       Main.discordCache.push({

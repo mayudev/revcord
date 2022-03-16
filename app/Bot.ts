@@ -114,7 +114,7 @@ export class Bot {
     });
 
     this.discord.on("messageCreate", (message) =>
-      handleDiscordMessage(this.revolt, message)
+      handleDiscordMessage(this.revolt, this.discord, message)
     );
 
     this.discord.on("messageUpdate", (oldMessage, newMessage) => {
