@@ -10,7 +10,11 @@ import npmlog from "npmlog";
 import { Client as RevoltClient } from "revolt.js";
 import { Main } from "./Main";
 import { Mapping, PartialDiscordMessage } from "./interfaces";
-import { DiscordEmojiPattern, DiscordPingPattern } from "./util/regex";
+import {
+  DiscordChannelPattern,
+  DiscordEmojiPattern,
+  DiscordPingPattern,
+} from "./util/regex";
 
 /**
  * This file contains code taking care of things from Discord to Revolt
@@ -63,6 +67,18 @@ function formatMessage(
           ping,
           `[@${match.user.username}#${match.user.discriminator}]()`
         );
+      }
+    }
+  }
+
+  // Handle channel mentions
+  const channelMentions = content.match(DiscordChannelPattern);
+  if (channelMentions) {
+    for (const [index, mention] of channelMentions.entries()) {
+      const match = mentions.channels.at(index);
+
+      if (match && match instanceof TextChannel) {
+        content = content.replace(mention, "#" + match.name);
       }
     }
   }
