@@ -1,4 +1,5 @@
 import { RevoltCommand } from "../interfaces";
+import { AllowBotsCommand } from "./allowBots";
 import { ConnectCommand } from "./connect";
 import { DisconnectCommand } from "./disconnect";
 import { HelpCommand } from "./help";
@@ -12,4 +13,5 @@ export const revoltCommands: RevoltCommand[] = [
   new DisconnectCommand(),
   new ListConnectionsCommand(),
   new HelpCommand(),
+  new AllowBotsCommand(),
 ];
