@@ -31,8 +31,8 @@ export class ListConnectionsCommand implements RevoltCommand {
 \`\`\`
 \#${connection.revolt} => ${connection.discord}
 Bots allowed: ${connection.allowBots ? "yes" : "no"}
-
-\`\`\``;
+\`\`\`
+`;
         });
 
         replyEmbed.description = desc;
