@@ -268,9 +268,7 @@ export async function handleDiscordMessageUpdate(
     // Find target Revolt channel
     const target = Main.mappings.find((mapping) => mapping.discord === message.channelId);
 
-    if (!target.allowBots && message.author.bot) return;
-
-    if (target) {
+    if (target && (target.allowBots || !message.author.bot)) {
       const cachedMessage = Main.discordCache.find(
         (cached) => cached.parentMessage === message.id
       );
