@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
 import universalExecutor from "app/universalExecutor";
-import { CommandInteraction } from "discord.js";
+import { CommandInteraction, MessageEmbed } from "discord.js";
 import npmlog from "npmlog";
 import { DiscordCommand } from "../interfaces";
 
@@ -15,17 +15,26 @@ export class ListConnectionsCommand implements DiscordCommand {
       try {
         const connections = await executor.connections();
 
-        let responseString = "**Discord => Revolt**\n";
+        let replyEmbed = new MessageEmbed()
+          .setAuthor({ name: "Revcord" })
+          .setColor("#5765f2")
+          .setTitle("Connected channels");
 
         if (connections.length) {
+          let desc = "";
           connections.forEach((connection) => {
-            responseString += `${connection.discord} => ${connection.revolt}\n`;
+            desc += `
+\`\`\`#${connection.discord} => ${connection.revolt}
+Bots allowed: ${connection.allowBots ? "yes" : "no"}
+\`\`\``;
           });
+
+          replyEmbed.setDescription(desc);
         } else {
-          responseString = "No connections found.";
+          replyEmbed.setDescription("No connections found.");
         }
 
-        await interaction.reply(responseString);
+        await interaction.reply({ embeds: [replyEmbed] });
       } catch (e) {
         npmlog.error("Discord", "An error occured while fetching connections");
         npmlog.error("Discord", e);

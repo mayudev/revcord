@@ -182,6 +182,7 @@ export default class UniversalExecutor {
     const channelPairs = mappings.map((mapping) => ({
       discord: mapping.discordChannelName,
       revolt: mapping.revoltChannelName,
+      allowBots: mapping.allowBots,
     }));
 
     return channelPairs;
