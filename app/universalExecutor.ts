@@ -109,6 +109,7 @@ export default class UniversalExecutor {
         revoltChannel: revoltTarget,
         discordChannelName: discordChannelName,
         revoltChannelName: revoltChannelName,
+        allowBots: true,
       });
 
       // Push into memory
