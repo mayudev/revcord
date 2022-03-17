@@ -1,4 +1,5 @@
 import { DiscordCommand } from "app/interfaces";
+import { AllowBotsCommand } from "./allowBots";
 import { ConnectCommand } from "./connect";
 import { DisconnectCommand } from "./disconnect";
 import { ListConnectionsCommand } from "./listConnections";
@@ -10,4 +11,5 @@ export const slashCommands: DiscordCommand[] = [
   new ConnectCommand(),
   new DisconnectCommand(),
   new ListConnectionsCommand(),
+  new AllowBotsCommand(),
 ];

@@ -9,4 +9,5 @@ export class MappingModel extends Model<
   declare revoltChannel: string;
   declare discordChannelName: string;
   declare revoltChannelName: string;
+  declare allowBots?: boolean;
 }

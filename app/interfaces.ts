@@ -12,6 +12,7 @@ import UniversalExecutor from "./universalExecutor";
 export interface Mapping {
   discord: string;
   revolt: string;
+  allowBots?: boolean;
 }
 
 export interface DiscordCommand {

@@ -112,11 +112,16 @@ export async function handleDiscordMessage(
   discord: DiscordClient,
   message: Message
 ) {
-  if (message.applicationId === discord.user.id) return;
-
   try {
     // Find target Revolt channel
     const target = Main.mappings.find((mapping) => mapping.discord === message.channelId);
+
+    // Bot check
+    if (
+      message.applicationId === discord.user.id ||
+      (message.author.bot && !target.allowBots)
+    )
+      return;
 
     if (target) {
       const mask = {
@@ -260,6 +265,8 @@ export async function handleDiscordMessageUpdate(
   try {
     // Find target Revolt channel
     const target = Main.mappings.find((mapping) => mapping.discord === message.channelId);
+
+    if (!target.allowBots && message.author.bot) return;
 
     if (target) {
       const cachedMessage = Main.discordCache.find(

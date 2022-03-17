@@ -184,4 +184,40 @@ export default class UniversalExecutor {
 
     return channelPairs;
   }
+
+  /**
+   * Toggle whether bot messages should be forwarded between a channel pair
+   */
+  async toggleAllowBots(target: Mapping): Promise<boolean> {
+    const index = Main.mappings.indexOf(target);
+
+    if (index > -1) {
+      // Update locally
+      Main.mappings[index].allowBots = !Main.mappings[index].allowBots;
+
+      const allowBots = Main.mappings[index].allowBots;
+
+      // Update the database
+      const affectedRows = await MappingModel.update(
+        {
+          allowBots,
+        },
+        {
+          where: {
+            discordChannel: target.discord,
+            revoltChannel: target.revolt,
+          },
+        }
+      );
+
+      if (affectedRows[0] === 0) {
+        npmlog.error("db", "No affected rows?");
+        throw new ConnectionError("No connection found.");
+      }
+
+      return allowBots;
+    } else {
+      throw new ConnectionError("This channel is not connected.");
+    }
+  }
 }

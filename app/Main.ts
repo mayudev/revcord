@@ -70,18 +70,23 @@ export class Main {
         revoltChannelName: {
           type: DataTypes.STRING,
         },
+        allowBots: {
+          type: DataTypes.BOOLEAN,
+          defaultValue: true,
+        },
       },
       { sequelize, modelName: "mapping" }
     );
 
     // Sync
-    await sequelize.sync();
+    await sequelize.sync({ alter: true });
 
     // Load mappings into memory
     const mappingsInDb = await MappingModel.findAll({});
     const mappings = mappingsInDb.map((mapping) => ({
       discord: mapping.discordChannel,
       revolt: mapping.revoltChannel,
+      allowBots: mapping.allowBots,
     }));
 
     return mappings;
