@@ -118,12 +118,10 @@ export async function handleDiscordMessage(
 
     // Bot check
     if (
-      message.applicationId === discord.user.id ||
-      (message.author.bot && !target.allowBots)
-    )
-      return;
-
-    if (target) {
+      target &&
+      message.applicationId !== discord.user.id &&
+      (!message.author.bot || target.allowBots)
+    ) {
       const mask = {
         name: message.author.username + "#" + message.author.discriminator,
         avatar: message.author.avatarURL(),
