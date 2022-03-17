@@ -97,6 +97,7 @@ export default class UniversalExecutor {
     const mapping = {
       discord: discordTarget,
       revolt: revoltTarget,
+      allowBots: true,
     };
 
     // Initiate Discord channel (setup webhooks)
