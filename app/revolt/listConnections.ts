@@ -2,6 +2,7 @@ import { RevoltCommand } from "../interfaces";
 import universalExecutor from "../universalExecutor";
 import npmlog from "npmlog";
 import { Message } from "revolt.js/dist/maps/Messages";
+import { SendableEmbed } from "revolt-api/types/Channels";
 
 export class ListConnectionsCommand implements RevoltCommand {
   data = {
@@ -17,17 +18,32 @@ export class ListConnectionsCommand implements RevoltCommand {
     try {
       const connections = await executor.connections();
 
-      let responseString = "**Revolt => Discord**\n";
+      let replyEmbed: SendableEmbed = {
+        type: "Text",
+        title: "Connected channels",
+        colour: "#5765f2",
+      };
 
       if (connections.length) {
+        let desc = "";
         connections.forEach((connection) => {
-          responseString += `${connection.revolt} => ${connection.discord}\n`;
+          desc += `
+\`\`\`
+\#${connection.revolt} => ${connection.discord}
+Bots allowed: ${connection.allowBots ? "yes" : "no"}
+
+\`\`\``;
         });
+
+        replyEmbed.description = desc;
       } else {
-        responseString = "No connections found.";
+        replyEmbed.description = "No connections found.";
       }
 
-      await message.reply(responseString);
+      await message.reply({
+        content: " ",
+        embeds: [replyEmbed],
+      });
     } catch (e) {
       npmlog.error("Discord", "An error occured while fetching connections");
       npmlog.error("Discord", e);
