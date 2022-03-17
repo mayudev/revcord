@@ -189,6 +189,7 @@ export async function handleDiscordMessage(
               }
             } catch (e) {
               npmlog.error("Discord", 'Bot lacks the "View message history" permission.');
+              npmlog.error("Discord", e);
             }
           }
         }
@@ -250,6 +251,7 @@ export async function handleDiscordMessage(
     }
   } catch (e) {
     npmlog.error("Revolt", "Couldn't send a message to Revolt");
+    npmlog.error("Revolt", e);
   }
 }
 
