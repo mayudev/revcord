@@ -63,7 +63,7 @@ You can use either slash commands on Discord or `rc!` prefix on Revolt (use `rc!
 
 To use the commands, **you** need the `Administrator` permission on Discord. On Revolt, only the server owner can run them (for now).
 
-1. Connecting Discord and Revolt channels 
+### Connecting Discord and Revolt channels 
 
 From **Discord**:
 ```
@@ -88,7 +88,7 @@ rc!connect 591234567890123456
 
 ✔️ Send a message to see if it works. Try editing and deleting it.
 
-2. Removing the connection
+### Removing the connection
 
 From **Discord**:
 ```
@@ -102,7 +102,7 @@ rc!disconnect
 
 You don't have to specify any channel. It will disconnect the channel the command is sent in.
 
-3. Showing connections
+### Showing connections
 
 From **Discord**:
 ```
@@ -113,6 +113,12 @@ From **Revolt**:
 ```
 rc!connections
 ```
+
+### Toggling bots
+
+You can toggle whether messages sent by bots should be forwarded. It's enabled by default (it's requied for NQN to work properly).
+
+Use either `rc!bots` or `/bots`
 
 ### with mappings.json (not recommended)
 1. Create a `mappings.json` file in the root directory.
