@@ -24,7 +24,7 @@ export class AllowBotsCommand implements DiscordCommand {
         if (target) {
           const state = await executor.toggleAllowBots(target);
           await interaction.reply(
-            `Forwarding of bot messages was ${state ? "enabled" : "disabled"}.`
+            `Forwarding of bot messages has been ${state ? "enabled" : "disabled"}.`
           );
         } else {
           await interaction.reply("This channel is not connected!");

@@ -25,7 +25,7 @@ export class AllowBotsCommand implements RevoltCommand {
         if (target) {
           const state = await executor.toggleAllowBots(target);
           await message.reply(
-            `Forwarding of bot messages was ${state ? "enabled" : "disabled"}.`
+            `Forwarding of bot messages has been ${state ? "enabled" : "disabled"}.`
           );
         } else {
           throw new ConnectionError("This channel is not connected!");
