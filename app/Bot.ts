@@ -182,6 +182,8 @@ export class Bot {
         // Try to find the command in collection
         if (this.usingJsonMappings) return;
 
+        if (!this.revoltCommands) return;
+
         const command = this.revoltCommands.get(commandName);
 
         if (!command) {
