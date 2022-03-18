@@ -2,12 +2,16 @@ import { Client as DiscordClient, TextChannel } from "discord.js";
 import npmlog from "npmlog";
 import { Client as RevoltClient } from "revolt.js";
 import { Channel } from "revolt.js/dist/maps/Channels";
+import { Message as RevoltMessage } from "revolt.js/dist/maps/Messages";
 import { initiateDiscordChannel, unregisterDiscordChannel } from "./discord";
 import { ConnectionPair, Mapping } from "./interfaces";
 import { Main } from "./Main";
 import { MappingModel } from "./models/Mapping";
+import { sendDiscordMessage } from "./revolt";
 
 export class ConnectionError extends Error {}
+
+export class EntityNotFoundError extends Error {}
 
 export type Platforms = "discord" | "revolt";
 
@@ -221,6 +225,65 @@ export default class UniversalExecutor {
       return allowBots;
     } else {
       throw new ConnectionError("This channel is not connected.");
+    }
+  }
+
+  /**
+   * Pings a Discord user
+   */
+  async pingDiscordUser(revoltMessage: RevoltMessage, username: string): Promise<string> {
+    const target = Main.mappings.find(
+      (mapping) => mapping.revolt === revoltMessage.channel_id
+    );
+
+    if (target) {
+      // Find target channel
+      const channel = await this.discord.channels.fetch(target.discord);
+
+      if (channel instanceof TextChannel) {
+        // Find user
+        const query = username.toLowerCase();
+
+        const user = this.discord.users.cache.find(
+          (user) =>
+            user.username.toLowerCase() === query ||
+            user.username.toLowerCase() + "#" + user.discriminator === query
+        );
+
+        if (user) {
+          // Find webhook
+          const webhook = Main.webhooks.find(
+            (webhook) => webhook.name === "revcord-" + target.revolt
+          );
+
+          if (!webhook) {
+            throw new Error("No webhook");
+          }
+
+          // Send message
+          const avatarURL = revoltMessage.author.generateAvatarURL({}, true);
+
+          await sendDiscordMessage(
+            webhook,
+            {
+              messageId: revoltMessage._id,
+              authorId: revoltMessage.author_id,
+              channelId: revoltMessage.channel_id,
+            },
+            `<@${user.id}>`,
+            revoltMessage.author.username,
+            avatarURL,
+            null,
+            true
+          );
+
+          return user.username + "#" + user.discriminator;
+        } else {
+          throw new EntityNotFoundError("User not found.");
+        }
+      }
+    } else {
+      throw new EntityNotFoundError("This channel is not connected.");
     }
   }
 }

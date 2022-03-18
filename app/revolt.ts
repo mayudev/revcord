@@ -1,8 +1,8 @@
-import { Client as DiscordClient, MessageEmbed, TextChannel } from "discord.js";
+import { Client as DiscordClient, MessageEmbed, TextChannel, Webhook } from "discord.js";
 import npmlog from "npmlog";
 import { Client as RevoltClient } from "revolt.js";
 import { Message } from "revolt.js/dist/maps/Messages";
-import { AttachmentType, ReplyObject } from "./interfaces";
+import { AttachmentType, ReplyObject, RevoltSourceParams } from "./interfaces";
 import { Main } from "./Main";
 import { RevoltChannelPattern, RevoltPingPattern } from "./util/regex";
 
@@ -185,25 +185,64 @@ export async function handleRevoltMessage(
           });
         }
 
-        const webhookMessage = await webhook.send({
-          content: messageString,
-          username: message.author.username,
-          avatarURL: message.author.generateAvatarURL({}, true),
-          embeds: embed ? [embed] : [],
-        });
+        const avatarURL = message.author.generateAvatarURL({}, true);
 
-        Main.revoltCache.push({
-          parentMessage: message._id,
-          parentAuthor: message.author_id,
-          createdMessage: webhookMessage.id,
-          channelId: message.channel_id,
-        });
+        await sendDiscordMessage(
+          webhook,
+          {
+            messageId: message._id,
+            authorId: message.author_id,
+            channelId: message.channel_id,
+          },
+          messageString,
+          message.author.username,
+          avatarURL,
+          embed,
+          false
+        );
       }
     }
   } catch (e) {
     npmlog.error("Discord", "Couldn't send a message to Discord");
     npmlog.error("Discord", e);
   }
+}
+
+/**
+ * Send a message to Discord
+ * @param webhook Discord webhook
+ * @param sourceParams Revolt source message params
+ * @param content Target message content
+ * @param username Username for webhook
+ * @param avatarURL Avatar URL for webhook
+ * @param embed Embed for webhook
+ * @param allowUserPing Whether to allow user pings
+ */
+export async function sendDiscordMessage(
+  webhook: Webhook,
+  sourceParams: RevoltSourceParams,
+  content: string,
+  username: string,
+  avatarURL: string,
+  embed: MessageEmbed,
+  allowUserPing: boolean
+) {
+  const webhookMessage = await webhook.send({
+    content,
+    username,
+    avatarURL,
+    embeds: embed ? [embed] : [],
+    allowedMentions: {
+      parse: allowUserPing ? ["users"] : [],
+    },
+  });
+
+  Main.revoltCache.push({
+    parentMessage: sourceParams.messageId,
+    parentAuthor: sourceParams.authorId,
+    channelId: sourceParams.channelId,
+    createdMessage: webhookMessage.id,
+  });
 }
 
 /**

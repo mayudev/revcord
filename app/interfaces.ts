@@ -72,3 +72,9 @@ export interface ReplyObject {
 }
 
 export type AttachmentType = "embed" | "file";
+
+export interface RevoltSourceParams {
+  messageId: string;
+  authorId: string;
+  channelId: string;
+}
