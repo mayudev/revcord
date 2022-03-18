@@ -34,7 +34,7 @@ export class AllowBotsCommand implements DiscordCommand {
           await interaction.reply("Error! " + e.message);
         } else {
           await interaction.reply("Something went very wrong. Check the logs.");
-          npmlog.error("Discord", "An error occured while toggling bots");
+          npmlog.error("Discord", "An error occurred while toggling bots");
           npmlog.error("Discord", e);
         }
       }

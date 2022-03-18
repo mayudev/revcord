@@ -36,7 +36,7 @@ Bots allowed: ${connection.allowBots ? "yes" : "no"}
 
         await interaction.reply({ embeds: [replyEmbed] });
       } catch (e) {
-        npmlog.error("Discord", "An error occured while fetching connections");
+        npmlog.error("Discord", "An error occurred while fetching connections");
         npmlog.error("Discord", e);
 
         await interaction.reply("An error happened. Check logs.");

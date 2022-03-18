@@ -82,7 +82,7 @@ export class Bot {
         try {
           initiateDiscordChannel(channel, mapping);
         } catch (e) {
-          npmlog.error("Discord", "An error occured while initializing webhooks");
+          npmlog.error("Discord", "An error occurred while initializing webhooks");
           npmlog.error("Discord", e);
         }
       });

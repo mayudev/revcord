@@ -35,7 +35,7 @@ export class AllowBotsCommand implements RevoltCommand {
           await message.reply("Error! " + e.message);
         } else {
           await message.reply("Something went very wrong. Check the logs.");
-          npmlog.error("Revolt", "An error occured while toggling bots");
+          npmlog.error("Revolt", "An error occurred while toggling bots");
           npmlog.error("Revolt", e);
         }
       }

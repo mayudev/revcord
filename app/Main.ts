@@ -109,7 +109,7 @@ export class Main {
       } catch (e) {
         npmlog.error(
           "db",
-          "A database error occured. If you don't know what to do, try removing the `revcord.sqlite` file (will reset all your settings)."
+          "A database error occurred. If you don't know what to do, try removing the `revcord.sqlite` file (will reset all your settings)."
         );
         npmlog.error("db", e);
       }
