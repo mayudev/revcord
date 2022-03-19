@@ -122,6 +122,7 @@ export async function handleDiscordMessage(
       message.applicationId !== discord.user.id &&
       (!message.author.bot || target.allowBots)
     ) {
+      // Prepare masquerade
       const mask = {
         name: message.author.username + "#" + message.author.discriminator,
         avatar: message.author.avatarURL(),
@@ -134,6 +135,7 @@ export async function handleDiscordMessage(
       let replyEmbed: ReplyObject;
 
       if (reference) {
+        // Find cross-platform replies
         const crossPlatformReference = Main.revoltCache.find(
           (cached) => cached.createdMessage === reference.messageId
         );
@@ -141,6 +143,7 @@ export async function handleDiscordMessage(
         if (crossPlatformReference) {
           replyPing = crossPlatformReference.parentMessage;
         } else {
+          // Find same-platform replies
           const samePlatformReference = Main.discordCache.find(
             (cached) => cached.parentMessage === reference.messageId
           );
@@ -197,6 +200,7 @@ export async function handleDiscordMessage(
       const sticker = message.stickers.first();
       let stickerUrl = sticker && sticker.url;
 
+      // Format message content (parse emojis, mentions, images etc.)
       const messageString = formatMessage(
         message.attachments,
         message.content,
@@ -204,6 +208,7 @@ export async function handleDiscordMessage(
         stickerUrl
       );
 
+      // Prepare message object
       // revolt.js doesn't support masquerade yet, but we can use them using this messy trick.
       const messageObject = {
         content: messageString,
