@@ -228,8 +228,10 @@ export async function handleDiscordMessage(
         });
       }
 
-      // Translate embeds, if any
-      if (message.embeds.length) {
+      // Translate embeds, if present.
+      // Allow embeds only from bots, since a regular user
+      // shouldn't be able to send them.
+      if (message.embeds.length && message.author.bot) {
         if (typeof messageObject.embeds === "undefined") messageObject.embeds = [];
         const embed = translateDiscordEmbed(message.embeds[0]);
         messageObject.embeds.push(embed);
