@@ -257,6 +257,13 @@ export async function handleDiscordMessage(
   } catch (e) {
     npmlog.error("Revolt", "Couldn't send a message to Revolt");
     npmlog.error("Revolt", e);
+
+    if ("response" in e && "status" in e.response && e.response.status === 403) {
+      npmlog.error(
+        "Revolt",
+        "It seems the bot doesn't have enough permissions (most likely Masquerade)"
+      );
+    }
   }
 }
 
