@@ -26,11 +26,21 @@ async function formatMessage(revolt: RevoltClient, message: Message) {
   // Handle pings
   const pings = content.match(RevoltPingPattern);
   if (pings && message.mentions) {
-    for (const [index, ping] of pings.entries()) {
-      const match = message.mentions.at(index);
+    for (const ping of pings) {
+      const matched = RevoltPingPattern.exec(ping);
+      RevoltPingPattern.lastIndex = 0;
 
-      if (match) {
-        content = content.replace(ping, `@${match.username}`);
+      // Extract the mentioned member's ID and look for it in mentions
+      if (matched !== null) {
+        const id = matched.groups["id"];
+
+        if (id) {
+          const match = message.mentions.find((member) => member._id === id);
+
+          if (match) {
+            content = content.replace(ping, `@${match.username}`);
+          }
+        }
       }
     }
   }
