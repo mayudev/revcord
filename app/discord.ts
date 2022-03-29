@@ -10,12 +10,7 @@ import {
 import npmlog from "npmlog";
 import { Client as RevoltClient } from "revolt.js";
 import { Main } from "./Main";
-import {
-  AttachmentType,
-  Mapping,
-  PartialDiscordMessage,
-  ReplyObject,
-} from "./interfaces";
+import { Mapping, PartialDiscordMessage, ReplyObject } from "./interfaces";
 import {
   DiscordChannelPattern,
   DiscordEmojiPattern,
