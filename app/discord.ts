@@ -61,14 +61,29 @@ function formatMessage(
   // Handle pings
   const pings = content.match(DiscordPingPattern);
   if (pings) {
-    for (const [index, ping] of pings.entries()) {
-      const match = mentions.members.at(index);
+    for (const ping of pings) {
+      const matched = DiscordPingPattern.exec(ping);
+      // reset internal pointer because i'm too lazy to figure out however it works
+      DiscordPingPattern.lastIndex = 0;
 
-      if (match) {
-        content = content.replace(
-          ping,
-          `[@${match.user.username}#${match.user.discriminator}]()`
-        );
+      // Extract the mentioned member's ID from ping string
+      if (matched !== null) {
+        const id = matched.groups["id"];
+
+        if (id) {
+          // Find the member among mentions by ID
+          const match = mentions.members.find((member) => member.id === id);
+
+          // Why? Because if a user is mentioned twice,
+          // mentions collection contains only the first mention.
+
+          if (match) {
+            content = content.replace(
+              ping,
+              `[@${match.user.username}#${match.user.discriminator}]()`
+            );
+          }
+        }
       }
     }
   }
