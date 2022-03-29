@@ -21,7 +21,6 @@ import { translateDiscordEmbed } from "./util/embeds";
 /**
  * This file contains code taking care of things from Discord to Revolt
  * Discord => Revolt
- * and so uses Main.discordCache
  */
 
 /**

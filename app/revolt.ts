@@ -9,7 +9,6 @@ import { RevoltChannelPattern, RevoltPingPattern } from "./util/regex";
 /**
  * This file contains code taking care of things from Revolt to Discord
  * Revolt => Discord
- * and so uses Main.revoltCache
  */
 
 /**
