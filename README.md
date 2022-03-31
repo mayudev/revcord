@@ -25,7 +25,7 @@
 
 ## 🔩 Setup
 
-It's recommended to have the latest version of Node.js (v16)
+**Node v16+ is required!**
 
 Important: this bot is meant to be used in one server (Discord+Revolt), but can be used in more as long as they share the same admin.
 
@@ -54,6 +54,8 @@ Of course, replace ... with tokens.
 
 6. Invite the bot to to a Revolt and Discord server.
 7. Start the bot using `npm start`.
+
+Note: it's recommended to use something like [pm2](https://pm2.keymetrics.io/) or [nodemon](https://nodemon.io/) to run the bot. Make sure to pass the `--experimental-specifier-resolution=node` flag to node manually, otherwise it will not run (it's included in the default start script).
 
 ## 🔧 Configuration
 
@@ -121,6 +123,9 @@ You can toggle whether messages sent by bots should be forwarded. It's enabled b
 Use either `rc!bots` or `/bots`
 
 ### with mappings.json (not recommended)
+
+#### This is not recommended!
+
 1. Create a `mappings.json` file in the root directory.
 2. Use the following format:
 ```json
