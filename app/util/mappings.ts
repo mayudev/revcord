@@ -9,9 +9,13 @@ export default async function getMappings(): Promise<Array<Mapping>> {
 
     const file = readFileSync(path, "utf-8");
     const data = JSON.parse(file) as Array<Mapping>;
+    npmlog.warn("mappings", "mappings.json found");
+    npmlog.warn(
+      "mappings",
+      "Using mappings.json is not recommended as it's not the supported method. Please use commands to configure the bot instead, otherwise you may encounter more bugs."
+    );
     return data;
   } catch (err) {
-    npmlog.warn("mappings", "No mappings.json found");
     throw "No mappings";
   }
 }
