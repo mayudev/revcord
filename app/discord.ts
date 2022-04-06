@@ -41,7 +41,7 @@ function formatMessage(
   // Handle emojis
   const emojis = content.match(DiscordEmojiPattern);
   if (emojis) {
-    emojis.forEach((emoji) => {
+    emojis.forEach((emoji, i) => {
       const dissected = DiscordEmojiPattern.exec(emoji);
 
       // reset internal pointer... what is that even
@@ -50,8 +50,18 @@ function formatMessage(
       if (dissected !== null) {
         const emojiName = dissected.groups["name"];
         const emojiId = dissected.groups["id"];
+
         if (emojiName && emojiId) {
-          content = content.replace(emoji, `[:${emojiName}:]()`);
+          let emojiUrl;
+
+          // Limit displayed emojis to 5 to reduce spam
+          if (i < 5) {
+            emojiUrl =
+              "https://cdn.discordapp.com/emojis/" +
+              emojiId +
+              ".webp?size=32&quality=lossless";
+          }
+          content = content.replace(emoji, `[:${emojiName}:](${emojiUrl})`);
         }
       }
     });
