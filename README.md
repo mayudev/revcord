@@ -25,6 +25,8 @@
 
 ## 🔩 Setup
 
+New: You can use [Docker](#using-docker) instead.
+
 **Node v16+ is required!**
 
 Important: this bot is meant to be used in one server (Discord+Revolt), but can be used in more as long as they share the same admin.
@@ -56,6 +58,23 @@ Of course, replace ... with tokens.
 7. Start the bot using `npm start`.
 
 Note: it's recommended to use something like [pm2](https://pm2.keymetrics.io/) or [nodemon](https://nodemon.io/) to run the bot. Make sure to pass the `--experimental-specifier-resolution=node` flag to node manually, otherwise it will not run (it's included in the default start script).
+
+### Using Docker
+
+You need Docker and docker-compose installed.
+
+Follow the steps above to create a `.env` file[^1]. You do not have to run `npm install` and `npm run build`, obviously. Also, make sure your bots have all the required permissions as explained above.
+
+Before you run docker-compose, use `touch revcord.sqlite` to create the database file and leave it empty.
+
+Then you should be ready to go.
+
+```
+docker-compose up -d
+```
+
+[^1]: Alternatively, you can edit the `docker-compose.yml` file appropriately. Make sure to remove `./.env:/app/.env` below `volumes:` so it won't complain when you don't have a `.env` file.
+
 
 ## 🔧 Configuration
 
