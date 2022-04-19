@@ -27,7 +27,7 @@
 
 New: You can use [Docker](#using-docker) instead.
 
-**Node v16+ is required!**
+**Node v16.9+ is required!**
 
 Important: this bot is meant to be used in one server (Discord+Revolt), but can be used in more as long as they share the same admin.
 
