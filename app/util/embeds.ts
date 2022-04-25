@@ -1,54 +1,106 @@
 import { MessageEmbed } from "discord.js";
 import { SendableEmbed } from "revolt-api/types/Channels";
 
-export function translateDiscordEmbed(embed: MessageEmbed): SendableEmbed {
-  let revoltEmbed: SendableEmbed = {
-    type: "Text",
-  };
+interface Field {
+  name: string;
+  content: string;
+}
 
-  let contentString = "";
+export class RevcordEmbed {
+  constructor() {}
 
-  if (embed.title) {
-    contentString += "### " + embed.title + "\n\n";
+  title: string;
+  content: string;
+  description: string;
+  color: string;
+  url: string;
+  author: string;
+  iconURL: string;
+  footer: string;
+
+  fields: Field[];
+
+  fromDiscord(embed: MessageEmbed) {
+    if (embed.title) {
+      this.title = embed.title;
+
+      if (embed.url) this.url = embed.url;
+
+      if (embed.description) {
+        this.description = embed.description;
+      }
+
+      if (embed.author && embed.author.iconURL) {
+        this.iconURL = embed.author.iconURL;
+      }
+
+      if (embed.author && embed.author.name) {
+        this.author = embed.author.name;
+      }
+
+      if (embed.hexColor) {
+        this.color = embed.hexColor;
+      }
+
+      if (embed.footer && embed.footer.text) {
+        this.footer = embed.footer.text;
+      }
+
+      this.fields = embed.fields.map((field) => ({
+        name: field.name,
+        content: field.value,
+      }));
+
+      return this;
+    }
   }
 
-  // I can't think of a better way to do this, so the image
-  // will override the thumbnail.
-  //if (embed.thumbnail) revoltEmbed.media = embed.thumbnail.url;
-  //if (embed.image) revoltEmbed.media = embed.image.url;
-  // This causes 400 for some reason.
+  // Creates a Revolt embed
+  toRevolt(): SendableEmbed {
+    let result: SendableEmbed = {
+      type: "Text",
+    };
 
-  if (embed.url) revoltEmbed.url = embed.url;
+    let content = "";
 
-  if (embed.description) {
-    contentString += embed.description + "\n\n";
+    // Apply title
+    if (this.title) {
+      content += "### " + this.title + "\n\n";
+    }
+
+    // I can't think of a better way to do this, so the image
+    // will override the thumbnail.
+    //if (embed.thumbnail) revoltEmbed.media = embed.thumbnail.url;
+    //if (embed.image) revoltEmbed.media = embed.image.url;
+    // This causes 400 for some reason.
+    // update: it seems the url has to be hosted on autumn. too lazy to do that :trol:
+    if (this.url) result.url = this.url;
+
+    if (this.description) content += this.description + "\n\n";
+
+    if (this.author) result.title = this.author;
+
+    if (this.iconURL) result.icon_url = this.iconURL;
+
+    if (this.color) result.colour = this.color;
+
+    if (this.footer) content += "\n> " + this.footer + "\n";
+
+    // Process fields
+    this.fields.forEach((field) => {
+      // Fix formatting
+      let name = field.name.replaceAll("```", "\n```\n");
+
+      // Append to content string
+      content += name + "\n";
+
+      let fieldContent = field.content.replaceAll("```", "\n```\n");
+
+      content += fieldContent + "\n";
+    });
+
+    result.description = content;
+
+    return result;
   }
-  if (embed.author && embed.author.iconURL) {
-    revoltEmbed.icon_url = embed.author.iconURL;
-  }
-  if (embed.author && embed.author.name) {
-    revoltEmbed.title = embed.author.name;
-  }
-  if (embed.hexColor) {
-    revoltEmbed.colour = embed.hexColor;
-  }
-
-  embed.fields.forEach((field) => {
-    let fieldName = field.name;
-    fieldName = fieldName.replaceAll("```", "\n```\n");
-
-    contentString += `${fieldName}\n`;
-
-    let fieldValue = field.value;
-    fieldValue = fieldValue.replaceAll("```", "\n```\n");
-    contentString += `${fieldValue}\n\n`;
-  });
-
-  if (embed.footer && embed.footer.text) {
-    contentString += "\n> " + embed.footer.text + "\n";
-  }
-
-  revoltEmbed.description = contentString;
-
-  return revoltEmbed;
 }

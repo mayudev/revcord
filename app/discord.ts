@@ -16,7 +16,7 @@ import {
   DiscordEmojiPattern,
   DiscordPingPattern,
 } from "./util/regex";
-import { translateDiscordEmbed } from "./util/embeds";
+import { RevcordEmbed } from "./util/embeds";
 
 /**
  * This file contains code taking care of things from Discord to Revolt
@@ -256,8 +256,12 @@ export async function handleDiscordMessage(
       // Allow embeds only from bots, since a regular user
       // shouldn't be able to send them.
       if (message.embeds.length && message.author.bot) {
+        // Add an empty array
         if (typeof messageObject.embeds === "undefined") messageObject.embeds = [];
-        const embed = translateDiscordEmbed(message.embeds[0]);
+
+        // Translate embed
+        const embed = new RevcordEmbed().fromDiscord(message.embeds[0]).toRevolt();
+
         messageObject.embeds.push(embed);
       }
 
