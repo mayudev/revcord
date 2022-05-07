@@ -1,5 +1,5 @@
 import { MessageEmbed } from "discord.js";
-import { SendableEmbed } from "revolt-api/types/Channels";
+import type { SendableEmbed } from "revolt-api";
 
 interface Field {
   name: string;
@@ -57,9 +57,7 @@ export class RevcordEmbed {
 
   // Creates a Revolt embed
   toRevolt(): SendableEmbed {
-    let result: SendableEmbed = {
-      type: "Text",
-    };
+    let result: SendableEmbed = {};
 
     let content = "";
 

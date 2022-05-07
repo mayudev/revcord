@@ -31,7 +31,6 @@ ${command.data.usage ? "Usage: `" + command.data.usage + "`\n" : ""}`;
     message.channel.sendMessage({
       embeds: [
         {
-          type: "Text",
           title: "Revcord",
           description: markup,
           colour: "#7289DA", // british moment

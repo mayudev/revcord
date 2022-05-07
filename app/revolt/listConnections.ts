@@ -2,7 +2,7 @@ import { RevoltCommand } from "../interfaces";
 import universalExecutor from "../universalExecutor";
 import npmlog from "npmlog";
 import { Message } from "revolt.js/dist/maps/Messages";
-import { SendableEmbed } from "revolt-api/types/Channels";
+import type { SendableEmbed } from "revolt-api";
 
 export class ListConnectionsCommand implements RevoltCommand {
   data = {
@@ -19,7 +19,6 @@ export class ListConnectionsCommand implements RevoltCommand {
       const connections = await executor.connections();
 
       let replyEmbed: SendableEmbed = {
-        type: "Text",
         title: "Connected channels",
         colour: "#5765f2",
       };
