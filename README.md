@@ -46,6 +46,11 @@ REVOLT_TOKEN = ...
 ```
 Of course, replace ... with tokens.
 
+If you are running a self-hosted instance of Revolt, additionally set the `API_URL` variable:
+```
+API_URL = https://api.revolt.chat
+```
+
 4. **Important!** Make sure to select the following permissions in URL Generator when making an invite for your bot (Your bot in Discord Developers -> `OAuth2` -> `URL Generator`) (or if you're lazy, just select `Administrator`) Note **applications.commands**!
    
 ![permissions](docs/permissions.png)
