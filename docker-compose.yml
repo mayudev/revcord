@@ -3,6 +3,7 @@ version: "3.7"
 services:
   revcord:
     build:
+      context: .
       dockerfile: Dockerfile
     volumes:
       - ./revcord.sqlite:/app/revcord.sqlite:rw
