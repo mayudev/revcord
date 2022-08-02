@@ -1,7 +1,6 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
 import { REST } from "@discordjs/rest";
 import { RESTPostAPIApplicationCommandsJSONBody, Routes } from "discord-api-types/v9";
-import { Client } from "discord.js";
+import { Client, SlashCommandBuilder } from "discord.js";
 import npmlog from "npmlog";
 
 export async function registerSlashCommands(

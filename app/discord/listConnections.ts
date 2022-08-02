@@ -1,6 +1,10 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
 import universalExecutor from "app/universalExecutor";
-import { CommandInteraction, EmbedBuilder, PermissionFlagsBits } from "discord.js";
+import {
+  CommandInteraction,
+  EmbedBuilder,
+  PermissionFlagsBits,
+  SlashCommandBuilder,
+} from "discord.js";
 import npmlog from "npmlog";
 import { DiscordCommand } from "../interfaces";
 

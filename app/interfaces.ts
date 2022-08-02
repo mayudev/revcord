@@ -1,9 +1,9 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
 import {
   Collection,
   Attachment,
   MessageMentions,
   User,
+  SlashCommandBuilder,
   ChatInputCommandInteraction,
 } from "discord.js";
 import { Message } from "revolt.js/dist/maps/Messages";

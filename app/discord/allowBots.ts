@@ -1,8 +1,7 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
 import { DiscordCommand } from "../interfaces";
 import { Main } from "../Main";
 import universalExecutor, { ConnectionError } from "../universalExecutor";
-import { ChatInputCommandInteraction } from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import npmlog from "npmlog";
 import { hasAdministratorPermission } from "../util/permissions";
 
