@@ -1,8 +1,9 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
 import { DiscordCommand } from "../interfaces";
 import UniversalExecutor, { ConnectionError } from "../universalExecutor";
-import { CommandInteraction } from "discord.js";
+import { ChatInputCommandInteraction } from "discord.js";
 import npmlog from "npmlog";
+import { hasAdministratorPermission } from "../util/permissions";
 
 export class ConnectCommand implements DiscordCommand {
   data = new SlashCommandBuilder()
@@ -15,7 +16,7 @@ export class ConnectCommand implements DiscordCommand {
         .setRequired(true)
     );
 
-  async execute(interaction: CommandInteraction, executor: UniversalExecutor) {
+  async execute(interaction: ChatInputCommandInteraction, executor: UniversalExecutor) {
     // Argument check
     const target = interaction.options.getString("channel");
 
@@ -25,7 +26,7 @@ export class ConnectCommand implements DiscordCommand {
     }
 
     // Permission check
-    if (interaction.memberPermissions.has("ADMINISTRATOR")) {
+    if (hasAdministratorPermission(interaction.memberPermissions)) {
       try {
         await executor.connect(interaction.channelId, target);
         await interaction.reply("Channels are now connected!");

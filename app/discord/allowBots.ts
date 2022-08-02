@@ -2,8 +2,9 @@ import { SlashCommandBuilder } from "@discordjs/builders";
 import { DiscordCommand } from "../interfaces";
 import { Main } from "../Main";
 import universalExecutor, { ConnectionError } from "../universalExecutor";
-import { CommandInteraction, CacheType } from "discord.js";
+import { ChatInputCommandInteraction } from "discord.js";
 import npmlog from "npmlog";
+import { hasAdministratorPermission } from "../util/permissions";
 
 export class AllowBotsCommand implements DiscordCommand {
   data = new SlashCommandBuilder()
@@ -11,11 +12,11 @@ export class AllowBotsCommand implements DiscordCommand {
     .setDescription("Toggle whether bot messages should be forwarded to Revolt channel");
 
   async execute(
-    interaction: CommandInteraction<CacheType>,
+    interaction: ChatInputCommandInteraction,
     executor: universalExecutor
   ): Promise<void> {
     // Permission check
-    if (interaction.memberPermissions.has("ADMINISTRATOR")) {
+    if (hasAdministratorPermission(interaction.memberPermissions)) {
       try {
         const target = Main.mappings.find(
           (mapping) => mapping.discord === interaction.channelId

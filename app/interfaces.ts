@@ -1,10 +1,10 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
 import {
   Collection,
-  CommandInteraction,
-  MessageAttachment,
+  Attachment,
   MessageMentions,
   User,
+  ChatInputCommandInteraction,
 } from "discord.js";
 import { Message } from "revolt.js/dist/maps/Messages";
 import UniversalExecutor from "./universalExecutor";
@@ -19,7 +19,10 @@ export interface DiscordCommand {
   data:
     | SlashCommandBuilder
     | Omit<SlashCommandBuilder, "addSubcommandGroup" | "addSubcommand">;
-  execute(interaction: CommandInteraction, executor: UniversalExecutor): Promise<void>;
+  execute(
+    interaction: ChatInputCommandInteraction,
+    executor: UniversalExecutor
+  ): Promise<void>;
 }
 
 interface RevoltCommandData {
@@ -54,7 +57,7 @@ export interface CachedMessage {
 
 export interface PartialDiscordMessage {
   author: User;
-  attachments: Collection<string, MessageAttachment>;
+  attachments: Collection<string, Attachment>;
   channelId: string;
   content: string;
   id: string;

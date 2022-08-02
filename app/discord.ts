@@ -1,9 +1,10 @@
 import {
-  AnyChannel,
+  Attachment,
+  Channel,
+  ChannelType,
   Client as DiscordClient,
   Collection,
   Message,
-  MessageAttachment,
   MessageMentions,
   TextChannel,
 } from "discord.js";
@@ -17,6 +18,7 @@ import {
   DiscordPingPattern,
 } from "./util/regex";
 import { RevcordEmbed } from "./util/embeds";
+import { hasWebhookPermissions } from "./util/permissions";
 
 /**
  * This file contains code taking care of things from Discord to Revolt
@@ -31,7 +33,7 @@ import { RevcordEmbed } from "./util/embeds";
  * @returns Formatted string
  */
 function formatMessage(
-  attachments: Collection<string, MessageAttachment>,
+  attachments: Collection<string, Attachment>,
   content: string,
   mentions: MessageMentions,
   stickerUrl?: string
@@ -369,13 +371,9 @@ export async function handleDiscordMessageDelete(
  * @param mapping A mapping pair
  * @throws
  */
-export async function initiateDiscordChannel(channel: AnyChannel, mapping: Mapping) {
-  if (channel instanceof TextChannel) {
-    if (
-      !channel.guild.me.permissions.has("MANAGE_WEBHOOKS") ||
-      !channel.guild.me.permissions.has("SEND_MESSAGES") ||
-      !channel.guild.me.permissions.has("VIEW_CHANNEL")
-    ) {
+export async function initiateDiscordChannel(channel: Channel, mapping: Mapping) {
+  if (channel.type === ChannelType.GuildText) {
+    if (!hasWebhookPermissions(channel.guild.members.me)) {
       throw new Error(
         "Bot doesn't have sufficient permissions in server " + channel.guild.name + "."
       );
@@ -390,7 +388,9 @@ export async function initiateDiscordChannel(channel: AnyChannel, mapping: Mappi
       npmlog.info("Discord", "Creating webhook for Discord#" + channel.name);
 
       // No webhook found, create one
-      webhook = await channel.createWebhook("revcord-" + mapping.revolt);
+      webhook = await channel.createWebhook({
+        name: "revcord-" + mapping.revolt,
+      });
     }
 
     Main.webhooks.push(webhook);
@@ -400,13 +400,9 @@ export async function initiateDiscordChannel(channel: AnyChannel, mapping: Mappi
 /**
  * Unregister a Discord channel (when disconnecting)
  */
-export async function unregisterDiscordChannel(channel: AnyChannel, mapping: Mapping) {
-  if (channel instanceof TextChannel) {
-    if (
-      !channel.guild.me.permissions.has("MANAGE_WEBHOOKS") ||
-      !channel.guild.me.permissions.has("SEND_MESSAGES") ||
-      !channel.guild.me.permissions.has("VIEW_CHANNEL")
-    ) {
+export async function unregisterDiscordChannel(channel: Channel, mapping: Mapping) {
+  if (channel.type === ChannelType.GuildText) {
+    if (!hasWebhookPermissions(channel.guild.members.me)) {
       throw new Error(
         "Bot doesn't have sufficient permissions in server " + channel.guild.name + "."
       );

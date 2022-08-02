@@ -1,4 +1,9 @@
-import { Client as DiscordClient, Collection, Intents } from "discord.js";
+import {
+  Client as DiscordClient,
+  Collection,
+  GatewayIntentBits,
+  Partials,
+} from "discord.js";
 import { Client as RevoltClient } from "revolt.js";
 import { REST } from "@discordjs/rest";
 import npmlog from "npmlog";
@@ -40,7 +45,12 @@ export class Bot {
 
   setupDiscordBot() {
     this.discord = new DiscordClient({
-      intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES],
+      intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent,
+      ],
+      partials: [Partials.Message],
       allowedMentions: {
         parse: [],
       },
@@ -89,7 +99,12 @@ export class Bot {
     });
 
     this.discord.on("interactionCreate", async (interaction) => {
-      if (!interaction.isCommand() || this.usingJsonMappings) return;
+      if (
+        !interaction.isCommand() ||
+        !interaction.isChatInputCommand() ||
+        this.usingJsonMappings
+      )
+        return;
 
       const command = this.commands.get(interaction.commandName);
 
@@ -142,7 +157,7 @@ export class Bot {
   }
 
   setupRevoltBot() {
-    this.revolt = new RevoltClient({apiURL: process.env.API_URL});
+    this.revolt = new RevoltClient({ apiURL: process.env.API_URL });
 
     this.revolt.once("ready", () => {
       npmlog.info("Revolt", `Logged in as ${this.revolt.user.username}`);

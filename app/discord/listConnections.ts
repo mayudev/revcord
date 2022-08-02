@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
 import universalExecutor from "app/universalExecutor";
-import { CommandInteraction, MessageEmbed } from "discord.js";
+import { CommandInteraction, EmbedBuilder, PermissionFlagsBits } from "discord.js";
 import npmlog from "npmlog";
 import { DiscordCommand } from "../interfaces";
 
@@ -11,11 +11,11 @@ export class ListConnectionsCommand implements DiscordCommand {
 
   async execute(interaction: CommandInteraction, executor: universalExecutor) {
     // Permission check
-    if (interaction.memberPermissions.has("MANAGE_CHANNELS")) {
+    if (interaction.memberPermissions.has(PermissionFlagsBits.ManageChannels)) {
       try {
         const connections = await executor.connections();
 
-        let replyEmbed = new MessageEmbed()
+        let replyEmbed = new EmbedBuilder()
           .setAuthor({ name: "Revcord" })
           .setColor("#5765f2")
           .setTitle("Connected channels");
