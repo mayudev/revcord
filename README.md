@@ -54,16 +54,20 @@ If you are running a self-hosted instance of Revolt, additionally set the `API_U
 API_URL = https://api.revolt.chat
 ```
 
-4. **Important!** Make sure to select the following permissions in URL Generator when making an invite for your bot (Your bot in Discord Developers -> `OAuth2` -> `URL Generator`) (or if you're lazy, just select `Administrator`) Note **applications.commands**!
+4. **Important!** Enable the **Message Content intent** in Discord bot settings. The bridge will refuse to start up otherwise.
+
+![message content intent](docs/intent.png)
+
+5. **Important!** Make sure to select the following permissions in URL Generator when making an invite for your bot (Your bot in Discord Developers -> `OAuth2` -> `URL Generator`) (or if you're lazy, just select `Administrator`) Note **applications.commands**!
    
 ![permissions](docs/permissions.png)
 
-5. **Important!** On Revolt, make sure to add the bot to a role that has the **Masquerade** permission!
+6. **Important!** On Revolt, make sure to add the bot to a role that has the **Masquerade** permission!
 
 ![revolt permissions](docs/mask.png)
 
-6. Invite the bot to to a Revolt and Discord server.
-7. Start the bot using `npm start`.
+7. Invite the bot to to a Revolt and Discord server.
+8. Start the bot using `npm start`.
 
 Note: it's recommended to use something like [pm2](https://pm2.keymetrics.io/) or [nodemon](https://nodemon.io/) to run the bot. Make sure to pass the `--experimental-specifier-resolution=node` flag to node manually, otherwise it will not run (it's included in the default start script).
 
