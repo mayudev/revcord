@@ -13,7 +13,9 @@
 
 🔗 A bridge for Discord and [Revolt](https://revolt.chat) with easy setup through commands, written in TypeScript using [revolt.js](https://github.com/revoltchat/revolt.js).
 
-## 📔 Features
+[Features](#features) | [Setup](#setup) | [Configuration](#configuration) | [Troubleshooting](#troubleshooting)
+
+## 📔 Features <a id="features"></a>
 
 - [x] Bridge messages between platforms
 - [x] Bridge attachments
@@ -27,7 +29,7 @@
 
 ![Screenshot - Revolt](docs/discord.png) ![Screenshot - Discord](docs/revolt.png)
 
-## 🔩 Setup
+## 🔩 Setup <a id="setup"></a>
 
 New: You can use [Docker](#using-docker) instead.
 
@@ -93,7 +95,7 @@ docker-compose up -d
 
 [^2]: Alternatively, you can edit the `docker-compose.yml` file appropriately. Make sure to remove `./.env:/app/.env` below `volumes:` so it won't complain when you don't have a `.env` file.
 
-## 🔧 Configuration
+## 🔧 Configuration <a id="configuration"></a>
 
 ### with commands
 
@@ -184,3 +186,19 @@ Use either `rc!bots` or `/bots`
   }
 ]
 ```
+
+## 🔥 Troubleshooting <a id="troubleshooting"></a>
+
+### Messages sent to Discord have no content!
+
+As in [configuration](#configuration) step 5, you need to enable the `Message Content Intent` in Discord bot settings. If this doesn't work, make sure the bot has permissions to read the messages in a channel.
+
+![intent](docs/intent.png)
+
+### Bot doesn't have sufficient permissions in the channel. Please check if the Manage Webhooks permission isn't being overriden for the bot role in that specific channel.
+
+Aside from server-wide permissions, there are also channel-specific permissions. This message means that at some point, the bot's permission to manage webhooks is being overriden on the channel level. The easiest fix is to change the override to allow it. Alternatively, you can grant the bot the `Administrator` permission which overrides all channel-specific permissions.
+
+In channel settings -> Permissions:
+
+![override](docs/override.png)
