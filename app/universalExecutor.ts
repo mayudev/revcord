@@ -4,6 +4,7 @@ import { Client as RevoltClient } from "revolt.js";
 import { Channel } from "revolt.js/dist/maps/Channels";
 import { Message as RevoltMessage } from "revolt.js/dist/maps/Messages";
 import { initiateDiscordChannel, unregisterDiscordChannel } from "./discord";
+import { InsufficientPermissionsError } from "./errors";
 import { ConnectionPair, Mapping } from "./interfaces";
 import { Main } from "./Main";
 import { MappingModel } from "./models/Mapping";
@@ -121,9 +122,13 @@ export default class UniversalExecutor {
       Main.mappings.push(mapping);
     } catch (e) {
       npmlog.error("Discord", e);
-      throw new ConnectionError(
-        "Something went wrong. Are you sure the bot has Manage Webhooks permission in Discord?"
-      );
+      if (e instanceof InsufficientPermissionsError) {
+        throw new ConnectionError(e.message);
+      } else {
+        throw new ConnectionError(
+          "An unexpected error occurred while setting up the webhook. Check the console for details."
+        );
+      }
     }
   }
 
