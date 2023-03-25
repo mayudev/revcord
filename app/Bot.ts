@@ -80,7 +80,7 @@ export class Bot {
       Main.mappings.forEach(async (mapping) => {
         const channel = this.discord.channels.cache.get(mapping.discord);
         try {
-          initiateDiscordChannel(channel, mapping);
+          await initiateDiscordChannel(channel, mapping);
         } catch (e) {
           npmlog.error("Discord", "An error occurred while initializing webhooks");
           npmlog.error("Discord", e);
@@ -142,7 +142,7 @@ export class Bot {
   }
 
   setupRevoltBot() {
-    this.revolt = new RevoltClient({apiURL: process.env.API_URL});
+    this.revolt = new RevoltClient({ apiURL: process.env.API_URL });
 
     this.revolt.once("ready", () => {
       npmlog.info("Revolt", `Logged in as ${this.revolt.user.username}`);

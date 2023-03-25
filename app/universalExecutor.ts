@@ -150,7 +150,7 @@ export default class UniversalExecutor {
 
         // And remove the webhook
         const channel = await this.discord.channels.fetch(mapping.discord);
-        unregisterDiscordChannel(channel, mapping);
+        await unregisterDiscordChannel(channel, mapping);
 
         /*
           Consideration: only the first match is removed from memory, while all
@@ -175,7 +175,7 @@ export default class UniversalExecutor {
 
         // And remove the webhook
         const channel = await this.discord.channels.fetch(mapping.discord);
-        unregisterDiscordChannel(channel, mapping);
+        await unregisterDiscordChannel(channel, mapping);
       } else {
         throw new ConnectionError("This channel isn't connected to anything.");
       }

@@ -17,7 +17,7 @@ import {
   DiscordPingPattern,
 } from "./util/regex";
 import { RevcordEmbed } from "./util/embeds";
-import { InsufficientPermissionsError } from "./errors";
+import { checkWebhookPermissions } from "./util/permissions";
 
 /**
  * This file contains code taking care of things from Discord to Revolt
@@ -372,28 +372,7 @@ export async function handleDiscordMessageDelete(
  */
 export async function initiateDiscordChannel(channel: AnyChannel, mapping: Mapping) {
   if (channel instanceof TextChannel) {
-    // Server-wide permission check
-    if (
-      !channel.guild.me.permissions.has("MANAGE_WEBHOOKS") ||
-      !channel.guild.me.permissions.has("SEND_MESSAGES") ||
-      !channel.guild.me.permissions.has("VIEW_CHANNEL")
-    ) {
-      throw new InsufficientPermissionsError(
-        "Bot doesn't have sufficient permissions in server " +
-          channel.guild.name +
-          ". Please check if the bot has the following permissions:" +
-          "Manage Webhooks, Send Messages, View Channel"
-      );
-    }
-
-    // Channel-specific permission check
-    if (!channel.guild.me.permissionsIn(channel).has("MANAGE_WEBHOOKS")) {
-      throw new InsufficientPermissionsError(
-        "Bot doesn't have sufficient permission in the channel. " +
-          "Please check if the `Manage Webhooks` permission isn't being overriden" +
-          " for the bot role in that specific channel."
-      );
-    }
+    await checkWebhookPermissions(channel);
 
     const webhooks = await channel.fetchWebhooks();
 
@@ -416,15 +395,7 @@ export async function initiateDiscordChannel(channel: AnyChannel, mapping: Mappi
  */
 export async function unregisterDiscordChannel(channel: AnyChannel, mapping: Mapping) {
   if (channel instanceof TextChannel) {
-    if (
-      !channel.guild.me.permissions.has("MANAGE_WEBHOOKS") ||
-      !channel.guild.me.permissions.has("SEND_MESSAGES") ||
-      !channel.guild.me.permissions.has("VIEW_CHANNEL")
-    ) {
-      throw new Error(
-        "Bot doesn't have sufficient permissions in server " + channel.guild.name + "."
-      );
-    }
+    await checkWebhookPermissions(channel);
 
     const webhooks = await channel.fetchWebhooks();
 
