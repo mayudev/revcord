@@ -31,7 +31,7 @@
 
 ## 🔩 Setup <a id="setup"></a>
 
-New: You can use [Docker](#using-docker) instead.
+You can use [Docker](#using-docker) as well.
 
 **Node v16.9+ is required!**
 
@@ -195,9 +195,9 @@ As in [setup](#setup) step 5, you need to enable the `Message Content Intent` in
 
 ![intent](docs/intent.png)
 
-### Bot doesn't have sufficient permissions in the channel. Please check if the Manage Webhooks permission isn't being overriden for the bot role in that specific channel.
+### Bot doesn't have sufficient permissions in the channel. Please check if the Manage Webhooks permission isn't being overridden for the bot role in that specific channel.
 
-Aside from server-wide permissions, there are also channel-specific permissions. This message means that at some point, the bot's permission to manage webhooks is being overriden on the channel level. The easiest fix is to change the override to allow it. Alternatively, you can grant the bot the `Administrator` permission which overrides all channel-specific permissions.
+Aside from server-wide permissions, there are also channel-specific permissions. This message means that at some point, the bot's permission to manage webhooks is being overridden on the channel level. The easiest fix is to change the override to allow it. Alternatively, you can grant the bot the `Administrator` permission which overrides all channel-specific permissions.
 
 In channel settings -> Permissions:
 

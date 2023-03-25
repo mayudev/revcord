@@ -25,7 +25,7 @@ export async function checkWebhookPermissions(channel: TextChannel) {
   if (!channel.guild.me.permissionsIn(channel).has("MANAGE_WEBHOOKS")) {
     throw new InsufficientPermissionsError(
       "Bot doesn't have sufficient permission in the channel. " +
-        "Please check if the `Manage Webhooks` permission isn't being overriden" +
+        "Please check if the `Manage Webhooks` permission isn't being overridden" +
         " for the bot role in that specific channel."
     );
   }
