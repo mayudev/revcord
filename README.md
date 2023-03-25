@@ -191,7 +191,7 @@ Use either `rc!bots` or `/bots`
 
 ### Messages sent to Discord have no content!
 
-As in [configuration](#configuration) step 5, you need to enable the `Message Content Intent` in Discord bot settings. If this doesn't work, make sure the bot has permissions to read the messages in a channel.
+As in [setup](#setup) step 5, you need to enable the `Message Content Intent` in Discord bot settings. If this doesn't work, make sure the bot has permissions to read the messages in a channel.
 
 ![intent](docs/intent.png)
 
