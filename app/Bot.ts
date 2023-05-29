@@ -114,7 +114,7 @@ export class Bot {
     });
 
     this.discord.on("messageCreate", (message) =>
-      handleDiscordMessage(this.revolt, this.discord, message)
+      handleDiscordMessage(this.revolt, this.discord, message, this.executor)
     );
 
     this.discord.on("messageUpdate", (oldMessage, newMessage) => {
@@ -125,6 +125,7 @@ export class Bot {
         attachments: oldMessage.attachments,
         channelId: oldMessage.channelId,
         content: newMessage.content,
+        embeds: newMessage.embeds,
         id: newMessage.id,
         mentions: newMessage.mentions,
       };

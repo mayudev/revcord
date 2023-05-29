@@ -3,6 +3,7 @@ import {
   Collection,
   CommandInteraction,
   MessageAttachment,
+  MessageEmbed,
   MessageMentions,
   User,
 } from "discord.js";
@@ -57,6 +58,7 @@ export interface PartialDiscordMessage {
   attachments: Collection<string, MessageAttachment>;
   channelId: string;
   content: string;
+  embeds: MessageEmbed[];
   id: string;
   mentions: MessageMentions;
 }
