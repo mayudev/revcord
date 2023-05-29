@@ -199,7 +199,7 @@ export class Bot {
           npmlog.error("Revolt", e);
         }
       } else {
-        handleRevoltMessage(this.discord, this.revolt, message, this.executor);
+        handleRevoltMessage(this.discord, this.revolt, message);
       }
     });
 
