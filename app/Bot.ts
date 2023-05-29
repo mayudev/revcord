@@ -114,7 +114,7 @@ export class Bot {
     });
 
     this.discord.on("messageCreate", (message) =>
-      handleDiscordMessage(this.revolt, this.discord, message, this.executor)
+      handleDiscordMessage(this.revolt, this.discord, message)
     );
 
     this.discord.on("messageUpdate", (oldMessage, newMessage) => {
@@ -199,7 +199,7 @@ export class Bot {
           npmlog.error("Revolt", e);
         }
       } else {
-        handleRevoltMessage(this.discord, this.revolt, message);
+        handleRevoltMessage(this.discord, this.revolt, message, this.executor);
       }
     });
 
