@@ -1,4 +1,4 @@
-import { Client as DiscordClient, Collection, Intents } from "discord.js";
+import { Client as DiscordClient, Collection, GatewayIntentBits } from "discord.js";
 import { Client as RevoltClient } from "revolt.js";
 import { REST } from "@discordjs/rest";
 import npmlog from "npmlog";
@@ -31,7 +31,7 @@ export class Bot {
   private revoltCommands: Collection<string, RevoltCommand>;
   private executor: UniversalExecutor;
 
-  constructor(private usingJsonMappings: boolean) {}
+  constructor(private usingJsonMappings: boolean) { }
 
   public async start() {
     this.setupDiscordBot();
@@ -40,7 +40,7 @@ export class Bot {
 
   setupDiscordBot() {
     this.discord = new DiscordClient({
-      intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES],
+      intents: [GatewayIntentBits.Guilds, GatewayIntentBits.MessageContent],
       allowedMentions: {
         parse: [],
       },
@@ -53,7 +53,7 @@ export class Bot {
       );
 
       // Register slash commands
-      this.rest = new REST({ version: "9" }).setToken(process.env.DISCORD_TOKEN);
+      this.rest = new REST().setToken(process.env.DISCORD_TOKEN);
 
       this.executor = new UniversalExecutor(this.discord, this.revolt);
 

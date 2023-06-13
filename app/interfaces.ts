@@ -1,8 +1,8 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
 import {
+  Attachment,
   Collection,
   CommandInteraction,
-  MessageAttachment,
   MessageMentions,
   User,
 } from "discord.js";
@@ -17,8 +17,8 @@ export interface Mapping {
 
 export interface DiscordCommand {
   data:
-    | SlashCommandBuilder
-    | Omit<SlashCommandBuilder, "addSubcommandGroup" | "addSubcommand">;
+  | SlashCommandBuilder
+  | Omit<SlashCommandBuilder, "addSubcommandGroup" | "addSubcommand">;
   execute(interaction: CommandInteraction, executor: UniversalExecutor): Promise<void>;
 }
 
@@ -33,7 +33,7 @@ export interface RevoltCommand {
   execute(message: Message, args: string, executor: UniversalExecutor): Promise<void>;
 }
 
-export interface ConnectionPair extends Mapping {}
+export interface ConnectionPair extends Mapping { }
 
 export interface CachedMessage {
   /** ID of the original message
@@ -54,7 +54,7 @@ export interface CachedMessage {
 
 export interface PartialDiscordMessage {
   author: User;
-  attachments: Collection<string, MessageAttachment>;
+  attachments: Collection<string, Attachment>;
   channelId: string;
   content: string;
   id: string;

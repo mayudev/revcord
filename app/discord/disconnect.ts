@@ -1,7 +1,7 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
 import { DiscordCommand } from "../interfaces";
 import UniversalExecutor, { ConnectionError } from "../universalExecutor";
-import { CommandInteraction } from "discord.js";
+import { CommandInteraction, PermissionFlagsBits } from "discord.js";
 import npmlog from "npmlog";
 
 export class DisconnectCommand implements DiscordCommand {
@@ -11,7 +11,7 @@ export class DisconnectCommand implements DiscordCommand {
 
   async execute(interaction: CommandInteraction, executor: UniversalExecutor) {
     // Permission check
-    if (interaction.memberPermissions.has("ADMINISTRATOR")) {
+    if (interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) {
       try {
         await executor.disconnect("discord", interaction.channelId);
         await interaction.reply("Channel disconnected successfully.");

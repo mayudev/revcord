@@ -1,4 +1,4 @@
-import { MessageEmbed } from "discord.js";
+import { Embed } from "discord.js";
 import type { SendableEmbed } from "revolt-api";
 
 interface Field {
@@ -7,7 +7,7 @@ interface Field {
 }
 
 export class RevcordEmbed {
-  constructor() {}
+  constructor() { }
 
   title: string;
   content: string;
@@ -20,7 +20,7 @@ export class RevcordEmbed {
 
   fields: Field[];
 
-  fromDiscord(embed: MessageEmbed) {
+  fromDiscord(embed: Embed) {
     if (embed.title) {
       this.title = embed.title;
 

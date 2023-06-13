@@ -1,7 +1,7 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
 import { DiscordCommand } from "../interfaces";
 import UniversalExecutor, { ConnectionError } from "../universalExecutor";
-import { CommandInteraction } from "discord.js";
+import { CommandInteraction, PermissionFlagsBits } from "discord.js";
 import npmlog from "npmlog";
 
 export class ConnectCommand implements DiscordCommand {
@@ -17,15 +17,15 @@ export class ConnectCommand implements DiscordCommand {
 
   async execute(interaction: CommandInteraction, executor: UniversalExecutor) {
     // Argument check
-    const target = interaction.options.getString("channel");
+    let target = interaction.options.get("channel").value;
 
-    if (!target) {
+    if (!target || typeof target !== "string") {
       await interaction.reply({ content: "Error! You didn't provide a channel" });
       return;
     }
 
     // Permission check
-    if (interaction.memberPermissions.has("ADMINISTRATOR")) {
+    if (interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) {
       try {
         await executor.connect(interaction.channelId, target);
         await interaction.reply("Channels are now connected!");

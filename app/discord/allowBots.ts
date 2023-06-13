@@ -2,7 +2,7 @@ import { SlashCommandBuilder } from "@discordjs/builders";
 import { DiscordCommand } from "../interfaces";
 import { Main } from "../Main";
 import universalExecutor, { ConnectionError } from "../universalExecutor";
-import { CommandInteraction, CacheType } from "discord.js";
+import { CommandInteraction, CacheType, PermissionFlagsBits } from "discord.js";
 import npmlog from "npmlog";
 
 export class AllowBotsCommand implements DiscordCommand {
@@ -15,7 +15,7 @@ export class AllowBotsCommand implements DiscordCommand {
     executor: universalExecutor
   ): Promise<void> {
     // Permission check
-    if (interaction.memberPermissions.has("ADMINISTRATOR")) {
+    if (interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) {
       try {
         const target = Main.mappings.find(
           (mapping) => mapping.discord === interaction.channelId
