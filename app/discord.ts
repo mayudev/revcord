@@ -53,7 +53,7 @@ function formatMessage(
         const emojiId = dissected.groups["id"];
 
         if (emojiName && emojiId) {
-          let emojiUrl;
+          let emojiUrl: string;
 
           // Limit displayed emojis to 5 to reduce spam
           if (i < 5) {
@@ -144,13 +144,14 @@ export async function handleDiscordMessage(
     ) {
       // Prepare masquerade
       const mask = {
-        name: message.author.username + "#" + message.author.discriminator,
+        // Support for new username system
+        name: message.author.username + (message.author.discriminator.length === 1 ? '' : "#" + message.author.discriminator),
         avatar: message.author.avatarURL(),
       };
 
       // Handle replies
       const reference = message.reference;
-      let replyPing;
+      let replyPing: string;
 
       let replyEmbed: ReplyObject;
 

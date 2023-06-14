@@ -40,7 +40,12 @@ export class Bot {
 
   setupDiscordBot() {
     this.discord = new DiscordClient({
-      intents: [GatewayIntentBits.Guilds, GatewayIntentBits.MessageContent],
+      // I must have GuildMessages to make it working again, thank you discord.js!
+      intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildMessages
+      ],
       allowedMentions: {
         parse: [],
       },
@@ -113,9 +118,19 @@ export class Bot {
       }
     });
 
-    this.discord.on("messageCreate", (message) =>
+    this.discord.on("messageCreate", message => {
       handleDiscordMessage(this.revolt, this.discord, message)
-    );
+    });
+
+    // Debugging
+    if (process.env.DEBUG && !isNaN(Number(process.env.DEBUG))) {
+      if (Number(process.env.DEBUG)) {
+        this.discord.on("debug", info => {
+          if (info.toLowerCase().includes("heartbeat")) return;
+          npmlog.info("DEBUG", info)
+        });
+      }
+    }
 
     this.discord.on("messageUpdate", (oldMessage, newMessage) => {
       if (oldMessage.applicationId === this.discord.user.id) return;
@@ -142,7 +157,7 @@ export class Bot {
   }
 
   setupRevoltBot() {
-    this.revolt = new RevoltClient({ apiURL: process.env.API_URL });
+    this.revolt = new RevoltClient({ apiURL: process.env.API_URL, autoReconnect: true });
 
     this.revolt.once("ready", () => {
       npmlog.info("Revolt", `Logged in as ${this.revolt.user.username}`);
