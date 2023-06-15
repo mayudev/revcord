@@ -140,6 +140,7 @@ export class Bot {
         attachments: oldMessage.attachments,
         channelId: oldMessage.channelId,
         content: newMessage.content,
+        embeds: newMessage.embeds,
         id: newMessage.id,
         mentions: newMessage.mentions,
       };
