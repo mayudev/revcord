@@ -1,4 +1,4 @@
-import { Client as DiscordClient, MessageEmbed, TextChannel, Webhook } from "discord.js";
+import { Client as DiscordClient, EmbedBuilder, TextChannel, Webhook } from "discord.js";
 import npmlog from "npmlog";
 import { Client as RevoltClient } from "revolt.js";
 import { Message } from "revolt.js/dist/maps/Messages";
@@ -57,7 +57,7 @@ async function formatMessage(revolt: RevoltClient, message: Message) {
           try {
             const channelData = await revolt.channels.fetch(channelId);
             content = content.replace(mention, "#" + channelData.name);
-          } catch {}
+          } catch { }
         }
       }
     }
@@ -162,7 +162,7 @@ export async function handleRevoltMessage(
               };
 
               reply = replyObject;
-            } catch {}
+            } catch { }
           }
         }
 
@@ -170,7 +170,7 @@ export async function handleRevoltMessage(
 
         let embed =
           reply &&
-          new MessageEmbed()
+          new EmbedBuilder()
             .setColor("#5875e8")
             .setAuthor({ name: reply.entity, iconURL: reply.entityImage });
 
@@ -233,7 +233,7 @@ export async function sendDiscordMessage(
   content: string,
   username: string,
   avatarURL: string,
-  embed: MessageEmbed,
+  embed: EmbedBuilder,
   allowUserPing: boolean
 ) {
   const webhookMessage = await webhook.send({

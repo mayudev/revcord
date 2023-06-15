@@ -1,11 +1,11 @@
 import {
-  AnyChannel,
+  Channel,
   Client as DiscordClient,
   Collection,
   Message,
-  MessageAttachment,
   MessageMentions,
   TextChannel,
+  Attachment
 } from "discord.js";
 import npmlog from "npmlog";
 import { Client as RevoltClient } from "revolt.js";
@@ -32,7 +32,7 @@ import { checkWebhookPermissions } from "./util/permissions";
  * @returns Formatted string
  */
 function formatMessage(
-  attachments: Collection<string, MessageAttachment>,
+  attachments: Collection<string, Attachment>,
   content: string,
   mentions: MessageMentions,
   stickerUrl?: string
@@ -53,7 +53,7 @@ function formatMessage(
         const emojiId = dissected.groups["id"];
 
         if (emojiName && emojiId) {
-          let emojiUrl;
+          let emojiUrl: string;
 
           // Limit displayed emojis to 5 to reduce spam
           if (i < 5) {
@@ -144,13 +144,14 @@ export async function handleDiscordMessage(
     ) {
       // Prepare masquerade
       const mask = {
-        name: message.author.username + "#" + message.author.discriminator,
+        // Support for new username system
+        name: message.author.username + (message.author.discriminator.length === 1 ? '' : "#" + message.author.discriminator),
         avatar: message.author.avatarURL(),
       };
 
       // Handle replies
       const reference = message.reference;
-      let replyPing;
+      let replyPing: string;
 
       let replyEmbed: ReplyObject;
 
@@ -235,11 +236,11 @@ export async function handleDiscordMessage(
         masquerade: mask,
         replies: replyPing
           ? [
-              {
-                id: replyPing,
-                mention: false,
-              },
-            ]
+            {
+              id: replyPing,
+              mention: false,
+            },
+          ]
           : [],
       } as any;
 
@@ -391,7 +392,7 @@ export async function handleDiscordMessageDelete(
  * @param mapping A mapping pair
  * @throws
  */
-export async function initiateDiscordChannel(channel: AnyChannel, mapping: Mapping) {
+export async function initiateDiscordChannel(channel: Channel, mapping: Mapping) {
   if (channel instanceof TextChannel) {
     await checkWebhookPermissions(channel);
 
@@ -404,7 +405,7 @@ export async function initiateDiscordChannel(channel: AnyChannel, mapping: Mappi
       npmlog.info("Discord", "Creating webhook for Discord#" + channel.name);
 
       // No webhook found, create one
-      webhook = await channel.createWebhook("revcord-" + mapping.revolt);
+      webhook = await channel.createWebhook({ name: `revcord-${mapping.revolt}` });
     }
 
     Main.webhooks.push(webhook);
@@ -414,7 +415,7 @@ export async function initiateDiscordChannel(channel: AnyChannel, mapping: Mappi
 /**
  * Unregister a Discord channel (when disconnecting)
  */
-export async function unregisterDiscordChannel(channel: AnyChannel, mapping: Mapping) {
+export async function unregisterDiscordChannel(channel: Channel, mapping: Mapping) {
   if (channel instanceof TextChannel) {
     await checkWebhookPermissions(channel);
 

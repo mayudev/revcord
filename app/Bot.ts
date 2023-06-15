@@ -1,4 +1,4 @@
-import { Client as DiscordClient, Collection, Intents } from "discord.js";
+import { Client as DiscordClient, Collection, GatewayIntentBits } from "discord.js";
 import { Client as RevoltClient } from "revolt.js";
 import { REST } from "@discordjs/rest";
 import npmlog from "npmlog";
@@ -31,7 +31,7 @@ export class Bot {
   private revoltCommands: Collection<string, RevoltCommand>;
   private executor: UniversalExecutor;
 
-  constructor(private usingJsonMappings: boolean) {}
+  constructor(private usingJsonMappings: boolean) { }
 
   public async start() {
     this.setupDiscordBot();
@@ -40,7 +40,12 @@ export class Bot {
 
   setupDiscordBot() {
     this.discord = new DiscordClient({
-      intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES],
+      // I must have GuildMessages to make it working again, thank you discord.js!
+      intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildMessages
+      ],
       allowedMentions: {
         parse: [],
       },
@@ -53,7 +58,7 @@ export class Bot {
       );
 
       // Register slash commands
-      this.rest = new REST({ version: "9" }).setToken(process.env.DISCORD_TOKEN);
+      this.rest = new REST().setToken(process.env.DISCORD_TOKEN);
 
       this.executor = new UniversalExecutor(this.discord, this.revolt);
 
@@ -113,9 +118,19 @@ export class Bot {
       }
     });
 
-    this.discord.on("messageCreate", (message) =>
+    this.discord.on("messageCreate", message => {
       handleDiscordMessage(this.revolt, this.discord, message)
-    );
+    });
+
+    // Debugging
+    if (process.env.DEBUG && !isNaN(Number(process.env.DEBUG))) {
+      if (Number(process.env.DEBUG)) {
+        this.discord.on("debug", info => {
+          if (info.toLowerCase().includes("heartbeat")) return;
+          npmlog.info("DEBUG", info)
+        });
+      }
+    }
 
     this.discord.on("messageUpdate", (oldMessage, newMessage) => {
       if (oldMessage.applicationId === this.discord.user.id) return;
@@ -143,7 +158,7 @@ export class Bot {
   }
 
   setupRevoltBot() {
-    this.revolt = new RevoltClient({ apiURL: process.env.API_URL });
+    this.revolt = new RevoltClient({ apiURL: process.env.API_URL, autoReconnect: true });
 
     this.revolt.once("ready", () => {
       npmlog.info("Revolt", `Logged in as ${this.revolt.user.username}`);

@@ -1,6 +1,6 @@
 build/
 mappings.json
-revcord.sqlite
+revcord.sqlite*
 
 # Editors
 .vscode/

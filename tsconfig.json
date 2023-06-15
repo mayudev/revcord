@@ -8,9 +8,17 @@
         "checkJs": true,
         "esModuleInterop": true,
         "moduleResolution": "node",
-        "lib": ["es2021"],
+        "lib": [
+            "es2021"
+        ],
         "forceConsistentCasingInFileNames": true,
+        "skipLibCheck": true
     },
-    "include": ["index.ts", "app/**/*.ts"],
-    "exclude": ["./webui"]
+    "include": [
+        "index.ts",
+        "app/**/*.ts"
+    ],
+    "exclude": [
+        "./webui"
+    ]
 }
