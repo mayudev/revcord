@@ -209,8 +209,8 @@ export async function handleDiscordMessage(
                 }
               }
             } catch (e) {
-              npmlog.error("Discord", 'Bot lacks the "View message history" permission.');
-              npmlog.error("Discord", e);
+              npmlog.warn("Discord", 'Bot lacks the "View message history" permission.');
+              npmlog.warn("Discord", e);
             }
           }
         }
@@ -261,9 +261,14 @@ export async function handleDiscordMessage(
         if (typeof messageObject.embeds === "undefined") messageObject.embeds = [];
 
         // Translate embed
+        try {
         const embed = new RevcordEmbed().fromDiscord(message.embeds[0]).toRevolt();
 
         messageObject.embeds.push(embed);
+        } catch (e) {
+          npmlog.warn("Discord", "Failed to translate embed.");
+          npmlog.warn("Discord", e);
+        }
       }
 
       const sentMessage = await revolt.channels
@@ -279,8 +284,8 @@ export async function handleDiscordMessage(
       });
     }
   } catch (e) {
-    npmlog.error("Revolt", "Couldn't send a message to Revolt");
-    npmlog.error("Revolt", e);
+    npmlog.warn("Revolt", "Couldn't send a message to Revolt");
+    npmlog.warn("Revolt", e);
 
     if ("response" in e && "status" in e.response && e.response.status === 403) {
       npmlog.error(
@@ -310,18 +315,34 @@ export async function handleDiscordMessageUpdate(
       );
 
       if (cachedMessage) {
-        const messageString = formatMessage(
+        const messageObject = {} as any;
+
+        if (message.content.length > 0) {
+          messageObject.content = formatMessage(
           message.attachments,
           message.content,
           message.mentions
         );
+        }
+
+        if (message.embeds.length && message.author.bot) {
+          if (typeof messageObject.embeds === "undefined") messageObject.embeds = [];
+
+          try {
+            const embed = new RevcordEmbed().fromDiscord(message.embeds[0]).toRevolt();
+            
+            messageObject.embeds.push(embed);
+          } catch (e) {
+            npmlog.warn("Discord", "Failed to translate embed.");
+            npmlog.warn("Discord", JSON.stringify(message.embeds[0]));
+            npmlog.warn("Discord", e);
+          }
+        }
 
         const channel = await revolt.channels.get(target.revolt);
         const messageToEdit = await channel.fetchMessage(cachedMessage.createdMessage);
 
-        await messageToEdit.edit({
-          content: messageString,
-        });
+        await messageToEdit.edit(messageObject);
       }
     }
   } catch (e) {
