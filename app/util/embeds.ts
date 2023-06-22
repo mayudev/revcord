@@ -7,7 +7,7 @@ interface Field {
 }
 
 export class RevcordEmbed {
-  constructor() { }
+  constructor() {}
 
   title: string;
   content: string;
@@ -23,36 +23,36 @@ export class RevcordEmbed {
   fromDiscord(embed: Embed) {
     if (embed.title) {
       this.title = embed.title;
-
-      if (embed.url) this.url = embed.url;
-
-      if (embed.description) {
-        this.description = embed.description;
-      }
-
-      if (embed.author && embed.author.iconURL) {
-        this.iconURL = embed.author.iconURL;
-      }
-
-      if (embed.author && embed.author.name) {
-        this.author = embed.author.name;
-      }
-
-      if (embed.hexColor) {
-        this.color = embed.hexColor;
-      }
-
-      if (embed.footer && embed.footer.text) {
-        this.footer = embed.footer.text;
-      }
-
-      this.fields = embed.fields.map((field) => ({
-        name: field.name,
-        content: field.value,
-      }));
-
-      return this;
     }
+
+    if (embed.url) this.url = embed.url;
+
+    if (embed.description) {
+      this.description = embed.description;
+    }
+
+    if (embed.author && embed.author.iconURL) {
+      this.iconURL = embed.author.iconURL;
+    }
+
+    if (embed.author && embed.author.name) {
+      this.author = embed.author.name;
+    }
+
+    if (embed.hexColor) {
+      this.color = embed.hexColor;
+    }
+
+    if (embed.footer && embed.footer.text) {
+      this.footer = embed.footer.text;
+    }
+
+    this.fields = embed.fields.map((field) => ({
+      name: field.name,
+      content: field.value,
+    }));
+
+    return this;
   }
 
   // Creates a Revolt embed
