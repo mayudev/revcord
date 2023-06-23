@@ -2,10 +2,9 @@
   "name": "revcord",
   "version": "1.1.1",
   "description": "A discord-revolt bridge",
-  "type": "module",
   "scripts": {
-    "start": "node --experimental-specifier-resolution=node build/index.js",
-    "dev": "node --experimental-specifier-resolution=node --loader ts-node/esm index.ts",
+    "start": "node build/index.js",
+    "dev": "ts-node index.ts",
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

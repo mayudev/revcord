@@ -1,24 +1,16 @@
 {
-    "compilerOptions": {
-        "module": "es2015",
-        "baseUrl": "./",
-        "outDir": "build",
-        "target": "es6",
-        "allowJs": true,
-        "checkJs": true,
-        "esModuleInterop": true,
-        "moduleResolution": "node",
-        "lib": [
-            "es2021"
-        ],
-        "forceConsistentCasingInFileNames": true,
-        "skipLibCheck": true
-    },
-    "include": [
-        "index.ts",
-        "app/**/*.ts"
-    ],
-    "exclude": [
-        "./webui"
-    ]
+  "compilerOptions": {
+    "module": "commonjs",
+    "baseUrl": "./",
+    "outDir": "build",
+    "target": "es6",
+    "allowJs": true,
+    "checkJs": true,
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "lib": ["es2021"],
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true
+  },
+  "include": ["index.ts", "app/**/*.ts"]
 }
