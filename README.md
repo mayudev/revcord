@@ -189,6 +189,18 @@ Use either `rc!bots` or `/bots`
 
 ## 🔥 Troubleshooting <a id="troubleshooting"></a>
 
+### `npm install` takes way too long, or `Please install sqlite3 package manually` (Raspberry Pi / 32-bit arm devices)
+
+This is an issue with `node-sqlite3` being a native module, but has no prebuilt binaries for 32-bit arm architectures available, therefore falling back to building from source.
+
+However, a Raspberry Pi is usually too low powered to finish compiling it.
+
+So, the only solution would be to use a more powerful device to cross-compile it to arm. For convenience, a prebuilt binary for `armv7l` architecture was provided [here](https://github.com/mayudev/revcord/releases/download/v1.2/node_sqlite3.node)
+
+You have to place it in `node_modules/sqlite3/lib/binding/napi-v6-linux-glibc-arm/node_sqlite3.node`.
+
+Alternatively, if your device supports it (Raspberry Pi 3 does), you can install a 64-bit distribution.
+
 ### Messages sent to Discord have no content!
 
 As in [setup](#setup) step 5, you need to enable the `Message Content Intent` in Discord bot settings. If this doesn't work, make sure the bot has permissions to read the messages in a channel.
