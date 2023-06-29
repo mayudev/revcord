@@ -66,7 +66,7 @@ API_URL = https://api.revolt.chat
 
 ![permissions](docs/permissions.png)
 
-5. Enable the `Message Content Intent` under Bot -> Privileged Gateway Intents. If you forget to do this, the bridge will only work one way (from Revolt to Discord) and messages from Discord will be empty.
+5. Enable the `Message Content Intent` under Bot -> Privileged Gateway Intents. If you forget to do this, the bot will crash with a `Used disallowed intents` message.
 
 ![intent](docs/intent.png)
 
