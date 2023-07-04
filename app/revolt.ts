@@ -79,7 +79,8 @@ async function formatMessage(revolt: RevoltClient, message: Message) {
 
           // Limited to 3 to stop bombing with links
           if (i < 3) {
-            emojiUrl = `https://autumn.revolt.chat/emojis/${encodeURIComponent(emojiId)}/?width=32&quality=lossless`
+            const REVOLT_ATTACHMENT_URL = process.env.REVOLT_ATTACHMENT_URL || "https://autumn.revolt.chat"
+            emojiUrl = `${REVOLT_ATTACHMENT_URL}/emojis/${encodeURIComponent(emojiId)}/?width=32&quality=lossless`
             content = content.replace(emoji, emojiUrl)
           }
         }

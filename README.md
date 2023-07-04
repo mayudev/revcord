@@ -25,7 +25,7 @@
 - [x] Bridge emoji[^1]
 - [x] Seamlessly display user information
 
-[^1]: Revolt to Discord works, but limited to 3 emojis displayed to stop bombing with links
+[^1]: Revolt to Discord works, but limited to 3 emojis displayed to stop bombing with links. Animated emojis from Revolt will convert to static due to limits on Revolt's image backend
 
 ![Screenshot - Revolt](docs/discord.png) ![Screenshot - Discord](docs/revolt.png)
 
@@ -56,10 +56,11 @@ REVOLT_TOKEN = ...
 
 Of course, replace ... with tokens.
 
-If you are running a self-hosted instance of Revolt, additionally set the `API_URL` variable:
+If you are running a self-hosted instance of Revolt, additionally set the `API_URL` and `REVOLT_ATTACHMENT_URL` variable:
 
 ```
 API_URL = https://api.revolt.chat
+REVOLT_ATTACHMENT_URL = https://autumn.revolt.chat
 ```
 
 4. **Important!** Make sure to select the following permissions in URL Generator when making an invite for your bot (Your bot in Discord Developers -> `OAuth2` -> `URL Generator`) (or if you're lazy, just select `Administrator`) Note **applications.commands**!
