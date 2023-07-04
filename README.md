@@ -25,7 +25,7 @@
 - [x] Bridge emoji[^1]
 - [x] Seamlessly display user information
 
-[^1]: Discord to Revolt only
+[^1]: Revolt to Discord works, but limited to 3 emojis displayed to stop bombing with links
 
 ![Screenshot - Revolt](docs/discord.png) ![Screenshot - Discord](docs/revolt.png)
 
