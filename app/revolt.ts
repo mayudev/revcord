@@ -4,7 +4,7 @@ import { Client as RevoltClient } from "revolt.js";
 import { Message } from "revolt.js/dist/maps/Messages";
 import { AttachmentType, ReplyObject, RevoltSourceParams } from "./interfaces";
 import { Main } from "./Main";
-import { RevoltChannelPattern, RevoltPingPattern } from "./util/regex";
+import { RevoltChannelPattern, RevoltEmojiPattern, RevoltPingPattern } from "./util/regex";
 
 /**
  * This file contains code taking care of things from Revolt to Discord
@@ -61,6 +61,31 @@ async function formatMessage(revolt: RevoltClient, message: Message) {
         }
       }
     }
+  }
+
+  // Handle emojis 
+  const emojis = content.match(RevoltEmojiPattern);
+  if (emojis) {
+    emojis.forEach((emoji, i) => {
+      const dissected = RevoltEmojiPattern.exec(emoji);
+
+      RevoltEmojiPattern.lastIndex = 0;
+
+      if (dissected != null) {
+        const emojiId = dissected.groups["id"];
+
+        if (emojiId) {
+          let emojiUrl: string;
+
+          // Limited to 3 to stop bombing with links
+          if (i < 3) {
+            const REVOLT_ATTACHMENT_URL = process.env.REVOLT_ATTACHMENT_URL || "https://autumn.revolt.chat"
+            emojiUrl = `${REVOLT_ATTACHMENT_URL}/emojis/${encodeURIComponent(emojiId)}/?width=32&quality=lossless`
+            content = content.replace(emoji, emojiUrl)
+          }
+        }
+      }
+    })
   }
 
   messageString += content + "\n";
