@@ -5,7 +5,7 @@ import {
   Message,
   MessageMentions,
   TextChannel,
-  Attachment
+  Attachment,
 } from "discord.js";
 import npmlog from "npmlog";
 import { Client as RevoltClient } from "revolt.js";
@@ -18,6 +18,7 @@ import {
 } from "./util/regex";
 import { RevcordEmbed } from "./util/embeds";
 import { checkWebhookPermissions } from "./util/permissions";
+import { truncate } from "./util/truncate";
 
 /**
  * This file contains code taking care of things from Discord to Revolt
@@ -145,7 +146,13 @@ export async function handleDiscordMessage(
       // Prepare masquerade
       const mask = {
         // Support for new username system
-        name: message.author.username + (message.author.discriminator.length === 1 ? '' : "#" + message.author.discriminator),
+        name: truncate(
+          message.author.username +
+            (message.author.discriminator.length === 1
+              ? ""
+              : "#" + message.author.discriminator),
+          32
+        ),
         avatar: message.author.avatarURL(),
       };
 
@@ -232,15 +239,15 @@ export async function handleDiscordMessage(
       // Prepare message object
       // revolt.js doesn't support masquerade yet, but we can use them using this messy trick.
       const messageObject = {
-        content: messageString,
+        content: truncate(messageString, 1984),
         masquerade: mask,
         replies: replyPing
           ? [
-            {
-              id: replyPing,
-              mention: false,
-            },
-          ]
+              {
+                id: replyPing,
+                mention: false,
+              },
+            ]
           : [],
       } as any;
 
@@ -263,9 +270,9 @@ export async function handleDiscordMessage(
 
         // Translate embed
         try {
-        const embed = new RevcordEmbed().fromDiscord(message.embeds[0]).toRevolt();
+          const embed = new RevcordEmbed().fromDiscord(message.embeds[0]).toRevolt();
 
-        messageObject.embeds.push(embed);
+          messageObject.embeds.push(embed);
         } catch (e) {
           npmlog.warn("Discord", "Failed to translate embed.");
           npmlog.warn("Discord", e);
@@ -320,10 +327,10 @@ export async function handleDiscordMessageUpdate(
 
         if (message.content.length > 0) {
           messageObject.content = formatMessage(
-          message.attachments,
-          message.content,
-          message.mentions
-        );
+            message.attachments,
+            message.content,
+            message.mentions
+          );
         }
 
         if (message.embeds.length && message.author.bot) {
@@ -331,7 +338,7 @@ export async function handleDiscordMessageUpdate(
 
           try {
             const embed = new RevcordEmbed().fromDiscord(message.embeds[0]).toRevolt();
-            
+
             messageObject.embeds.push(embed);
           } catch (e) {
             npmlog.warn("Discord", "Failed to translate embed.");
