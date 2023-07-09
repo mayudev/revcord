@@ -239,7 +239,7 @@ export async function handleDiscordMessage(
       // Prepare message object
       // revolt.js doesn't support masquerade yet, but we can use them using this messy trick.
       const messageObject = {
-        content: truncate(messageString, 2000),
+        content: truncate(messageString, 1984),
         masquerade: mask,
         replies: replyPing
           ? [

@@ -1,5 +1,6 @@
 import { Embed } from "discord.js";
 import type { SendableEmbed } from "revolt-api";
+import { truncate } from "./truncate";
 
 interface Field {
   name: string;
@@ -63,7 +64,7 @@ export class RevcordEmbed {
 
     // Apply title
     if (this.title) {
-      content += "### " + this.title + "\n\n";
+      result.title = truncate(this.title, 100);
     }
 
     // I can't think of a better way to do this, so the image
@@ -75,8 +76,6 @@ export class RevcordEmbed {
     if (this.url) result.url = this.url;
 
     if (this.description) content += this.description + "\n\n";
-
-    if (this.author) result.title = this.author;
 
     if (this.iconURL) result.icon_url = this.iconURL;
 
@@ -97,7 +96,7 @@ export class RevcordEmbed {
       content += fieldContent + "\n";
     });
 
-    result.description = content;
+    result.description = truncate(content, 1984);
 
     return result;
   }
