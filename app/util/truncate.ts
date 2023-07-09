@@ -6,3 +6,9 @@ export function truncate(value: string, limit: number) {
 
   return returnValue;
 }
+
+export function fitOrEmpty(value: string, limit: number) {
+  if (value.length > limit) {
+    return "";
+  } else return value;
+}
