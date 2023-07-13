@@ -31,7 +31,7 @@ export class Bot {
   private revoltCommands: Collection<string, RevoltCommand>;
   private executor: UniversalExecutor;
 
-  constructor(private usingJsonMappings: boolean) { }
+  constructor(private usingJsonMappings: boolean) {}
 
   public async start() {
     this.setupDiscordBot();
@@ -44,7 +44,7 @@ export class Bot {
       intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.MessageContent,
-        GatewayIntentBits.GuildMessages
+        GatewayIntentBits.GuildMessages,
       ],
       allowedMentions: {
         parse: [],
@@ -118,16 +118,16 @@ export class Bot {
       }
     });
 
-    this.discord.on("messageCreate", message => {
-      handleDiscordMessage(this.revolt, this.discord, message)
+    this.discord.on("messageCreate", (message) => {
+      handleDiscordMessage(this.revolt, this.discord, message);
     });
 
     // Debugging
     if (process.env.DEBUG && !isNaN(Number(process.env.DEBUG))) {
       if (Number(process.env.DEBUG)) {
-        this.discord.on("debug", info => {
+        this.discord.on("debug", (info) => {
           if (info.toLowerCase().includes("heartbeat")) return;
-          npmlog.info("DEBUG", info)
+          npmlog.info("DEBUG", info);
         });
       }
     }
@@ -184,9 +184,11 @@ export class Bot {
     });
 
     this.revolt.on("message", async (message) => {
-      if (message.author.bot !== null) return;
+      if (typeof message.content !== "string") return;
 
-      if (typeof message.content != "string") return;
+      const target = Main.mappings.find(
+        (mapping) => mapping.revolt === message.channel_id
+      );
 
       if (message.content.toString().startsWith("rc!")) {
         // Handle bot command
@@ -213,8 +215,12 @@ export class Bot {
           npmlog.error("Revolt", "Error while executing command");
           npmlog.error("Revolt", e);
         }
-      } else {
-        handleRevoltMessage(this.discord, this.revolt, message);
+      } else if (
+        target &&
+        message.author_id !== message.client.user._id &&
+        (!message.author.bot || target.allowBots)
+      ) {
+        handleRevoltMessage(this.discord, this.revolt, message, target);
       }
     });
 

@@ -2,9 +2,13 @@ import { Client as DiscordClient, EmbedBuilder, TextChannel, Webhook } from "dis
 import npmlog from "npmlog";
 import { Client as RevoltClient } from "revolt.js";
 import { Message } from "revolt.js/dist/maps/Messages";
-import { AttachmentType, ReplyObject, RevoltSourceParams } from "./interfaces";
+import { AttachmentType, Mapping, ReplyObject, RevoltSourceParams } from "./interfaces";
 import { Main } from "./Main";
-import { RevoltChannelPattern, RevoltEmojiPattern, RevoltPingPattern } from "./util/regex";
+import {
+  RevoltChannelPattern,
+  RevoltEmojiPattern,
+  RevoltPingPattern,
+} from "./util/regex";
 
 /**
  * This file contains code taking care of things from Revolt to Discord
@@ -57,13 +61,13 @@ async function formatMessage(revolt: RevoltClient, message: Message) {
           try {
             const channelData = await revolt.channels.fetch(channelId);
             content = content.replace(mention, "#" + channelData.name);
-          } catch { }
+          } catch {}
         }
       }
     }
   }
 
-  // Handle emojis 
+  // Handle emojis
   const emojis = content.match(RevoltEmojiPattern);
   if (emojis) {
     emojis.forEach((emoji, i) => {
@@ -79,13 +83,16 @@ async function formatMessage(revolt: RevoltClient, message: Message) {
 
           // Limited to 3 to stop bombing with links
           if (i < 3) {
-            const REVOLT_ATTACHMENT_URL = process.env.REVOLT_ATTACHMENT_URL || "https://autumn.revolt.chat"
-            emojiUrl = `${REVOLT_ATTACHMENT_URL}/emojis/${encodeURIComponent(emojiId)}/?width=32&quality=lossless`
-            content = content.replace(emoji, emojiUrl)
+            const REVOLT_ATTACHMENT_URL =
+              process.env.REVOLT_ATTACHMENT_URL || "https://autumn.revolt.chat";
+            emojiUrl = `${REVOLT_ATTACHMENT_URL}/emojis/${encodeURIComponent(
+              emojiId
+            )}/?width=32&quality=lossless`;
+            content = content.replace(emoji, emojiUrl);
           }
         }
       }
-    })
+    });
   }
 
   messageString += content + "\n";
@@ -109,132 +116,126 @@ async function formatMessage(revolt: RevoltClient, message: Message) {
 export async function handleRevoltMessage(
   discord: DiscordClient,
   revolt: RevoltClient,
-  message: Message
+  message: Message,
+  target: Mapping
 ) {
   try {
-    // Find target Discord channel
-    const target = Main.mappings.find((mapping) => mapping.revolt === message.channel_id);
+    const channel = await discord.channels.fetch(target.discord);
 
-    if (target) {
-      const channel = await discord.channels.fetch(target.discord);
+    if (channel instanceof TextChannel) {
+      const webhook = Main.webhooks.find(
+        (webhook) => webhook.name === "revcord-" + target.revolt
+      );
 
-      if (channel instanceof TextChannel) {
-        const webhook = Main.webhooks.find(
-          (webhook) => webhook.name === "revcord-" + target.revolt
+      if (!webhook) {
+        throw new Error("No webhook in channel Discord#" + channel.name);
+      }
+
+      // Handle replies
+      const reply_ids = message.reply_ids;
+      let reply: ReplyObject;
+
+      if (reply_ids) {
+        const crossPlatformReference = Main.discordCache.find(
+          (cached) => cached.createdMessage === reply_ids[0]
         );
 
-        if (!webhook) {
-          throw new Error("No webhook in channel Discord#" + channel.name);
-        }
-
-        // Handle replies
-        const reply_ids = message.reply_ids;
-        let reply: ReplyObject;
-
-        if (reply_ids) {
-          const crossPlatformReference = Main.discordCache.find(
-            (cached) => cached.createdMessage === reply_ids[0]
+        if (crossPlatformReference) {
+          // Find Discord message that's being replied to
+          const referencedMessage = await channel.messages.fetch(
+            crossPlatformReference.parentMessage
           );
 
-          if (crossPlatformReference) {
-            // Find Discord message that's being replied to
-            const referencedMessage = await channel.messages.fetch(
-              crossPlatformReference.parentMessage
-            );
+          // Parse attachments
+          let attachments: AttachmentType[] = [];
+
+          if (referencedMessage.attachments.first()) {
+            attachments.push("file");
+          }
+
+          if (referencedMessage.embeds.length > 0) {
+            attachments.push("embed");
+          }
+
+          const replyObject: ReplyObject = {
+            pingable: false,
+            entity:
+              referencedMessage.author.username +
+              "#" +
+              referencedMessage.author.discriminator,
+            entityImage: referencedMessage.author.avatarURL(),
+            content: referencedMessage.content,
+            originalUrl: referencedMessage.url,
+            attachments: attachments ? attachments : [],
+          };
+
+          reply = replyObject;
+        } else {
+          try {
+            const channel = revolt.channels.get(target.revolt);
+            const message = await channel.fetchMessage(reply_ids[0]);
 
             // Parse attachments
             let attachments: AttachmentType[] = [];
 
-            if (referencedMessage.attachments.first()) {
+            if (message.attachments !== null) {
               attachments.push("file");
-            }
-
-            if (referencedMessage.embeds.length > 0) {
-              attachments.push("embed");
             }
 
             const replyObject: ReplyObject = {
               pingable: false,
-              entity:
-                referencedMessage.author.username +
-                "#" +
-                referencedMessage.author.discriminator,
-              entityImage: referencedMessage.author.avatarURL(),
-              content: referencedMessage.content,
-              originalUrl: referencedMessage.url,
+              entity: message.author.username,
+              entityImage: message.author.generateAvatarURL({ size: 64 }),
+              content: message.content.toString(),
               attachments: attachments ? attachments : [],
             };
 
             reply = replyObject;
-          } else {
-            try {
-              const channel = revolt.channels.get(target.revolt);
-              const message = await channel.fetchMessage(reply_ids[0]);
-
-              // Parse attachments
-              let attachments: AttachmentType[] = [];
-
-              if (message.attachments !== null) {
-                attachments.push("file");
-              }
-
-              const replyObject: ReplyObject = {
-                pingable: false,
-                entity: message.author.username,
-                entityImage: message.author.generateAvatarURL({ size: 64 }),
-                content: message.content.toString(),
-                attachments: attachments ? attachments : [],
-              };
-
-              reply = replyObject;
-            } catch { }
-          }
+          } catch {}
         }
-
-        let messageString = await formatMessage(revolt, message);
-
-        let embed =
-          reply &&
-          new EmbedBuilder()
-            .setColor("#5875e8")
-            .setAuthor({ name: reply.entity, iconURL: reply.entityImage });
-
-        // Add original message URL and content
-        if (reply && reply.content) {
-          if (reply.originalUrl) {
-            embed?.setDescription(
-              `[**Reply to:**](${reply.originalUrl}) ` + reply.content
-            );
-          } else {
-            embed?.setDescription(`**Reply to**: ` + reply.content);
-          }
-        } else if (reply && reply.originalUrl) {
-          embed?.setDescription(`[**Reply to**](${reply.originalUrl})`);
-        }
-
-        // Add attachments field
-        if (reply && reply.attachments.length > 0) {
-          embed?.setFooter({
-            text: "contains " + reply.attachments.map((a) => a + " "),
-          });
-        }
-
-        const avatarURL = message.author.generateAvatarURL({}, true);
-
-        await sendDiscordMessage(
-          webhook,
-          {
-            messageId: message._id,
-            authorId: message.author_id,
-            channelId: message.channel_id,
-          },
-          messageString,
-          message.author.username,
-          avatarURL,
-          embed,
-          false
-        );
       }
+
+      let messageString = await formatMessage(revolt, message);
+
+      let embed =
+        reply &&
+        new EmbedBuilder()
+          .setColor("#5875e8")
+          .setAuthor({ name: reply.entity, iconURL: reply.entityImage });
+
+      // Add original message URL and content
+      if (reply && reply.content) {
+        if (reply.originalUrl) {
+          embed?.setDescription(`[**Reply to:**](${reply.originalUrl}) ` + reply.content);
+        } else {
+          embed?.setDescription(`**Reply to**: ` + reply.content);
+        }
+      } else if (reply && reply.originalUrl) {
+        embed?.setDescription(`[**Reply to**](${reply.originalUrl})`);
+      }
+
+      // Add attachments field
+      if (reply && reply.attachments.length > 0) {
+        embed?.setFooter({
+          text: "contains " + reply.attachments.map((a) => a + " "),
+        });
+      }
+
+      const avatarURL = message.author.generateAvatarURL({}, true);
+
+      await sendDiscordMessage(
+        webhook,
+        {
+          messageId: message._id,
+          authorId: message.author_id,
+          channelId: message.channel_id,
+        },
+        messageString,
+        message.author.username,
+        avatarURL,
+        embed,
+        false
+      );
     }
   } catch (e) {
     npmlog.error("Discord", "Couldn't send a message to Discord");
