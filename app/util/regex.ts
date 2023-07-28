@@ -5,3 +5,5 @@ export const DiscordChannelPattern = /<#(?<id>[0-9]{1,22})>/g;
 export const RevoltEmojiPattern = /:(?<id>[0-Z]{1,26}):/g;
 export const RevoltPingPattern = /<@(?<id>[0-Z]{1,26})>/g;
 export const RevoltChannelPattern = /<#(?<id>[0-Z]{1,26})>/g;
+
+export const TrailingNewlines = /[\s\r\n]+$/;

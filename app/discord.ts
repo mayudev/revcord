@@ -15,6 +15,7 @@ import {
   DiscordChannelPattern,
   DiscordEmojiPattern,
   DiscordPingPattern,
+  TrailingNewlines,
 } from "./util/regex";
 import { RevcordEmbed } from "./util/embeds";
 import { checkWebhookPermissions } from "./util/permissions";
@@ -118,6 +119,8 @@ function formatMessage(
   });
 
   if (stickerUrl) messageString += stickerUrl + "\n";
+
+  messageString = messageString.replace(TrailingNewlines, '');
 
   return messageString;
 }
@@ -267,11 +270,11 @@ export async function handleDiscordMessage(
       if (message.embeds.length && message.author.bot) {
         // Add an empty array
         if (typeof messageObject.embeds === "undefined") messageObject.embeds = [];
-
+        
         // Translate embed
         try {
           const embed = new RevcordEmbed().fromDiscord(message.embeds[0]).toRevolt();
-
+          
           messageObject.embeds.push(embed);
         } catch (e) {
           npmlog.warn("Discord", "Failed to translate embed.");
