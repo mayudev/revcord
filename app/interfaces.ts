@@ -1,4 +1,7 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
+import {
+  SlashCommandBuilder,
+  SlashCommandOptionsOnlyBuilder,
+} from "@discordjs/builders";
 import {
   Attachment,
   Collection,
@@ -17,10 +20,11 @@ export interface Mapping {
 }
 
 export interface DiscordCommand {
-  data:
-  | SlashCommandBuilder
-  | Omit<SlashCommandBuilder, "addSubcommandGroup" | "addSubcommand">;
-  execute(interaction: CommandInteraction, executor: UniversalExecutor): Promise<void>;
+  data: SlashCommandBuilder | SlashCommandOptionsOnlyBuilder;
+  execute(
+    interaction: CommandInteraction,
+    executor: UniversalExecutor
+  ): Promise<void>;
 }
 
 interface RevoltCommandData {
@@ -31,10 +35,14 @@ interface RevoltCommandData {
 
 export interface RevoltCommand {
   data: RevoltCommandData;
-  execute(message: Message, args: string, executor: UniversalExecutor): Promise<void>;
+  execute(
+    message: Message,
+    args: string,
+    executor: UniversalExecutor
+  ): Promise<void>;
 }
 
-export interface ConnectionPair extends Mapping { }
+export interface ConnectionPair extends Mapping {}
 
 export interface CachedMessage {
   /** ID of the original message
@@ -63,6 +71,7 @@ export interface PartialDiscordMessage {
   mentions: MessageMentions;
 }
 
+export type ReplyEmbedType = "reply" | "forward";
 export interface ReplyObject {
   pingable: boolean;
   entity?: string;
@@ -71,6 +80,7 @@ export interface ReplyObject {
   content: string;
   attachments: AttachmentType[];
   previewAttachment?: string;
+  embedType: ReplyEmbedType;
 }
 
 export type AttachmentType = "embed" | "file";

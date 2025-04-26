@@ -177,6 +177,7 @@ export async function handleRevoltMessage(
             content: referencedMessage.content,
             originalUrl: referencedMessage.url,
             attachments: attachments ? attachments : [],
+            embedType: "reply",
           };
 
           reply = replyObject;
@@ -198,6 +199,7 @@ export async function handleRevoltMessage(
               entityImage: message.author.generateAvatarURL({ size: 64 }),
               content: message.content.toString(),
               attachments: attachments ? attachments : [],
+              embedType: "reply",
             };
 
             reply = replyObject;

@@ -20,8 +20,8 @@
   "homepage": "https://github.com/mayudev/revcord#readme",
   "dependencies": {
     "@types/npmlog": "^4.1.4",
-    "discord-api-types": "^0.37.43",
-    "discord.js": "14.11.0",
+    "discord-api-types": "^0.38.1",
+    "discord.js": "14.19.1",
     "dotenv": "^16.1.4",
     "npmlog": "^7.0.1",
     "revolt.js": "^6.0.0",
