@@ -1,8 +1,18 @@
-import { Client as DiscordClient, EmbedBuilder, TextChannel, Webhook } from "discord.js";
+import {
+  Client as DiscordClient,
+  EmbedBuilder,
+  TextChannel,
+  Webhook,
+} from "discord.js";
 import npmlog from "npmlog";
 import { Client as RevoltClient } from "revolt.js";
 import { Message } from "revolt.js/dist/maps/Messages";
-import { AttachmentType, Mapping, ReplyObject, RevoltSourceParams } from "./interfaces";
+import {
+  AttachmentType,
+  Mapping,
+  ReplyObject,
+  RevoltSourceParams,
+} from "./interfaces";
 import { Main } from "./Main";
 import {
   RevoltChannelPattern,
@@ -87,7 +97,7 @@ async function formatMessage(revolt: RevoltClient, message: Message) {
               process.env.REVOLT_ATTACHMENT_URL || "https://autumn.revolt.chat";
             emojiUrl = `${REVOLT_ATTACHMENT_URL}/emojis/${encodeURIComponent(
               emojiId
-            )}/?width=32&quality=lossless`;
+            )}?width=32&quality=lossless`;
             content = content.replace(emoji, emojiUrl);
           }
         }
@@ -206,7 +216,9 @@ export async function handleRevoltMessage(
       // Add original message URL and content
       if (reply && reply.content) {
         if (reply.originalUrl) {
-          embed?.setDescription(`[**Reply to:**](${reply.originalUrl}) ` + reply.content);
+          embed?.setDescription(
+            `[**Reply to:**](${reply.originalUrl}) ` + reply.content
+          );
         } else {
           embed?.setDescription(`**Reply to**: ` + reply.content);
         }
@@ -285,9 +297,14 @@ export async function sendDiscordMessage(
  * @param revolt Revolt client
  * @param message Discord message object
  */
-export async function handleRevoltMessageUpdate(revolt: RevoltClient, message: Message) {
+export async function handleRevoltMessageUpdate(
+  revolt: RevoltClient,
+  message: Message
+) {
   // Find target Discord channel
-  const target = Main.mappings.find((mapping) => mapping.revolt === message.channel_id);
+  const target = Main.mappings.find(
+    (mapping) => mapping.revolt === message.channel_id
+  );
 
   if (target) {
     try {
@@ -320,7 +337,10 @@ export async function handleRevoltMessageUpdate(revolt: RevoltClient, message: M
  * @param revolt Revolt client
  * @param messageId Deleted Revolt message ID
  */
-export async function handleRevoltMessageDelete(revolt: RevoltClient, messageId: string) {
+export async function handleRevoltMessageDelete(
+  revolt: RevoltClient,
+  messageId: string
+) {
   // Find target Discord channel
   const cachedMessage = Main.revoltCache.find(
     (cached) => cached.parentMessage === messageId
