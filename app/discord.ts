@@ -120,7 +120,7 @@ function formatMessage(
 
   if (stickerUrl) messageString += stickerUrl + "\n";
 
-  messageString = messageString.replace(TrailingNewlines, '');
+  messageString = messageString.replace(TrailingNewlines, "");
 
   return messageString;
 }
@@ -136,9 +136,12 @@ export async function handleDiscordMessage(
   discord: DiscordClient,
   message: Message
 ) {
+  console.log(message);
   try {
     // Find target Revolt channel
-    const target = Main.mappings.find((mapping) => mapping.discord === message.channelId);
+    const target = Main.mappings.find(
+      (mapping) => mapping.discord === message.channelId
+    );
 
     // Bot check
     if (
@@ -158,14 +161,13 @@ export async function handleDiscordMessage(
         ),
         avatar: message.author.avatarURL(),
       };
-
       // Handle replies
       const reference = message.reference;
       let replyPing: string;
 
       let replyEmbed: ReplyObject;
 
-      if (reference) {
+      if (reference && message.messageSnapshots.size === 0) {
         // Find cross-platform replies
         const crossPlatformReference = Main.revoltCache.find(
           (cached) => cached.createdMessage === reference.messageId
@@ -208,22 +210,53 @@ export async function handleDiscordMessage(
                 replyEmbed = {
                   pingable: false,
                   entity:
-                    referenced.author.username + "#" + referenced.author.discriminator,
+                    referenced.author.username +
+                    "#" +
+                    referenced.author.discriminator,
                   entityImage: referenced.author.avatarURL(),
                   content: formattedContent,
                   attachments: [],
+                  embedType: "reply",
                 };
 
                 if (referenced.attachments.first()) {
                   replyEmbed.attachments.push("file");
-                  replyEmbed.previewAttachment = referenced.attachments.first().url;
+                  replyEmbed.previewAttachment =
+                    referenced.attachments.first().url;
                 }
               }
             } catch (e) {
-              npmlog.warn("Discord", 'Bot lacks the "View message history" permission.');
+              npmlog.warn(
+                "Discord",
+                'Bot lacks the "View message history" permission.'
+              );
               npmlog.warn("Discord", e);
             }
           }
+        }
+      }
+
+      // Contains forwarded message
+      if (message.messageSnapshots.size > 0) {
+        const referenced = message.messageSnapshots.at(0);
+
+        // Prepare reply embed
+        const formattedContent = formatMessage(
+          referenced.attachments,
+          referenced.content,
+          referenced.mentions
+        );
+
+        replyEmbed = {
+          pingable: false,
+          content: formattedContent,
+          attachments: [],
+          embedType: "forward",
+        };
+
+        if (referenced.attachments.first()) {
+          replyEmbed.attachments.push("file");
+          replyEmbed.previewAttachment = referenced.attachments.first().url;
         }
       }
 
@@ -255,12 +288,15 @@ export async function handleDiscordMessage(
       } as any;
 
       if (replyEmbed) {
-        if (typeof messageObject.embeds === "undefined") messageObject.embeds = [];
+        if (typeof messageObject.embeds === "undefined")
+          messageObject.embeds = [];
         messageObject.embeds.push({
           type: "Text",
           icon_url: replyEmbed.entityImage,
           title: replyEmbed.entity,
-          description: `**Reply to**: ${replyEmbed.content}`,
+          description: `**${
+            replyEmbed.embedType === "reply" ? "Reply to" : "Forwarded message"
+          }**: ${replyEmbed.content}`,
         });
       }
 
@@ -269,12 +305,15 @@ export async function handleDiscordMessage(
       // shouldn't be able to send them.
       if (message.embeds.length && message.author.bot) {
         // Add an empty array
-        if (typeof messageObject.embeds === "undefined") messageObject.embeds = [];
-        
+        if (typeof messageObject.embeds === "undefined")
+          messageObject.embeds = [];
+
         // Translate embed
         try {
-          const embed = new RevcordEmbed().fromDiscord(message.embeds[0]).toRevolt();
-          
+          const embed = new RevcordEmbed()
+            .fromDiscord(message.embeds[0])
+            .toRevolt();
+
           messageObject.embeds.push(embed);
         } catch (e) {
           npmlog.warn("Discord", "Failed to translate embed.");
@@ -298,7 +337,11 @@ export async function handleDiscordMessage(
     npmlog.warn("Revolt", "Couldn't send a message to Revolt");
     npmlog.warn("Revolt", e);
 
-    if ("response" in e && "status" in e.response && e.response.status === 403) {
+    if (
+      "response" in e &&
+      "status" in e.response &&
+      e.response.status === 403
+    ) {
       npmlog.error(
         "Revolt",
         "It seems the bot doesn't have enough permissions (most likely Masquerade)"
@@ -318,7 +361,9 @@ export async function handleDiscordMessageUpdate(
 ) {
   try {
     // Find target Revolt channel
-    const target = Main.mappings.find((mapping) => mapping.discord === message.channelId);
+    const target = Main.mappings.find(
+      (mapping) => mapping.discord === message.channelId
+    );
 
     if (target && (target.allowBots || !message.author.bot)) {
       const cachedMessage = Main.discordCache.find(
@@ -337,10 +382,13 @@ export async function handleDiscordMessageUpdate(
         }
 
         if (message.embeds.length && message.author.bot) {
-          if (typeof messageObject.embeds === "undefined") messageObject.embeds = [];
+          if (typeof messageObject.embeds === "undefined")
+            messageObject.embeds = [];
 
           try {
-            const embed = new RevcordEmbed().fromDiscord(message.embeds[0]).toRevolt();
+            const embed = new RevcordEmbed()
+              .fromDiscord(message.embeds[0])
+              .toRevolt();
 
             messageObject.embeds.push(embed);
           } catch (e) {
@@ -351,7 +399,9 @@ export async function handleDiscordMessageUpdate(
         }
 
         const channel = await revolt.channels.get(target.revolt);
-        const messageToEdit = await channel.fetchMessage(cachedMessage.createdMessage);
+        const messageToEdit = await channel.fetchMessage(
+          cachedMessage.createdMessage
+        );
 
         await messageToEdit.edit(messageObject);
       }
@@ -383,7 +433,9 @@ export async function handleDiscordMessageDelete(
 
       if (target) {
         const channel = await revolt.channels.get(target.revolt);
-        const messageToDelete = await channel.fetchMessage(cachedMessage.createdMessage);
+        const messageToDelete = await channel.fetchMessage(
+          cachedMessage.createdMessage
+        );
 
         await messageToDelete.delete();
 
@@ -402,20 +454,27 @@ export async function handleDiscordMessageDelete(
  * @param mapping A mapping pair
  * @throws
  */
-export async function initiateDiscordChannel(channel: Channel, mapping: Mapping) {
+export async function initiateDiscordChannel(
+  channel: Channel,
+  mapping: Mapping
+) {
   if (channel instanceof TextChannel) {
     await checkWebhookPermissions(channel);
 
     const webhooks = await channel.fetchWebhooks();
 
     // Try to find already created webhook
-    let webhook = webhooks.find((wh) => wh.name === "revcord-" + mapping.revolt);
+    let webhook = webhooks.find(
+      (wh) => wh.name === "revcord-" + mapping.revolt
+    );
 
     if (!webhook) {
       npmlog.info("Discord", "Creating webhook for Discord#" + channel.name);
 
       // No webhook found, create one
-      webhook = await channel.createWebhook({ name: `revcord-${mapping.revolt}` });
+      webhook = await channel.createWebhook({
+        name: `revcord-${mapping.revolt}`,
+      });
     }
 
     Main.webhooks.push(webhook);
@@ -425,14 +484,19 @@ export async function initiateDiscordChannel(channel: Channel, mapping: Mapping)
 /**
  * Unregister a Discord channel (when disconnecting)
  */
-export async function unregisterDiscordChannel(channel: Channel, mapping: Mapping) {
+export async function unregisterDiscordChannel(
+  channel: Channel,
+  mapping: Mapping
+) {
   if (channel instanceof TextChannel) {
     await checkWebhookPermissions(channel);
 
     const webhooks = await channel.fetchWebhooks();
 
     // Try to find created webhooks
-    let webhook = webhooks.find((wh) => wh.name === "revcord-" + mapping.revolt);
+    let webhook = webhooks.find(
+      (wh) => wh.name === "revcord-" + mapping.revolt
+    );
 
     npmlog.info("Discord", "Removing webhook for Discord#" + channel.name);
 
