@@ -4,6 +4,7 @@ revcord.sqlite*
 
 # Editors
 .vscode/
+.history/
 
 # Dependency directories
 node_modules/
