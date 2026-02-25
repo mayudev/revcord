@@ -1,25 +1,13 @@
-import {
-  Channel,
-  Client as DiscordClient,
-  Collection,
-  Message,
-  MessageMentions,
-  TextChannel,
-  Attachment,
-} from "discord.js";
+import {Channel, Client as DiscordClient, Message, MessageMentions, TextChannel,} from "discord.js";
 import npmlog from "npmlog";
-import { Client as RevoltClient } from "revolt.js";
-import { Main } from "./Main";
-import { Mapping, PartialDiscordMessage, ReplyObject } from "./interfaces";
-import {
-  DiscordChannelPattern,
-  DiscordEmojiPattern,
-  DiscordPingPattern,
-  TrailingNewlines,
-} from "./util/regex";
-import { RevcordEmbed } from "./util/embeds";
-import { checkWebhookPermissions } from "./util/permissions";
-import { truncate } from "./util/truncate";
+import {Client as RevoltClient} from "revolt.js";
+import {Main} from "./Main";
+import {Mapping, PartialDiscordMessage, ReplyObject} from "./interfaces";
+import {DiscordChannelPattern, DiscordEmojiPattern, DiscordPingPattern, TrailingNewlines,} from "./util/regex";
+import {RevcordEmbed} from "./util/embeds";
+import {checkWebhookPermissions} from "./util/permissions";
+import {truncate} from "./util/truncate";
+import Uploader from 'revolt-uploader';
 
 /**
  * This file contains code taking care of things from Discord to Revolt
@@ -28,13 +16,11 @@ import { truncate } from "./util/truncate";
 
 /**
  * Format a Discord message with all attachments to Revolt-friendly format
- * @param attachments message.attachments
  * @param content message.content
  * @param ping ID of the user to ping
  * @returns Formatted string
  */
 function formatMessage(
-  attachments: Collection<string, Attachment>,
   content: string,
   mentions: MessageMentions,
   stickerUrl?: string
@@ -114,15 +100,29 @@ function formatMessage(
 
   messageString += content + "\n";
 
-  attachments.forEach((attachment) => {
-    messageString += attachment.url + "\n";
-  });
-
   if (stickerUrl) messageString += stickerUrl + "\n";
 
   messageString = messageString.replace(TrailingNewlines, "");
 
   return messageString;
+}
+
+/**
+ *
+ */
+async function uploadAttachments(stoatClient, discordAttachments){
+  const uploader = new Uploader(stoatClient);
+  let ids = [];
+  try{
+    for (let [_, element] of discordAttachments) {
+      console.log(element);
+      ids.push(await uploader.uploadUrl(element.url, element.name));
+    }
+  } catch (e) {
+    npmlog.warn("Stoat", "Couldn't add attachment to Stoat");
+    npmlog.warn("Stoat", e);
+  }
+  return ids;
 }
 
 /**
@@ -202,11 +202,11 @@ export async function handleDiscordMessage(
 
                 // Prepare reply embed
                 const formattedContent = formatMessage(
-                  referenced.attachments,
                   referenced.content,
                   referenced.mentions
                 );
 
+                const ids = await uploadAttachments(revolt, referenced.attachments);
                 replyEmbed = {
                   pingable: false,
                   entity:
@@ -215,7 +215,7 @@ export async function handleDiscordMessage(
                     referenced.author.discriminator,
                   entityImage: referenced.author.avatarURL(),
                   content: formattedContent,
-                  attachments: [],
+                  attachments: ids,
                   embedType: "reply",
                 };
 
@@ -239,10 +239,10 @@ export async function handleDiscordMessage(
       // Contains forwarded message
       if (message.messageSnapshots.size > 0) {
         const referenced = message.messageSnapshots.at(0);
+        const ids = await uploadAttachments(revolt, referenced.attachments);
 
         // Prepare reply embed
         const formattedContent = formatMessage(
-          referenced.attachments,
           referenced.content,
           referenced.mentions
         );
@@ -250,7 +250,7 @@ export async function handleDiscordMessage(
         replyEmbed = {
           pingable: false,
           content: formattedContent,
-          attachments: [],
+          attachments: ids,
           embedType: "forward",
         };
 
@@ -266,7 +266,6 @@ export async function handleDiscordMessage(
 
       // Format message content (parse emojis, mentions, images etc.)
       const messageString = formatMessage(
-        message.attachments,
         message.content,
         message.mentions,
         stickerUrl
@@ -321,17 +320,41 @@ export async function handleDiscordMessage(
         }
       }
 
-      const sentMessage = await revolt.channels
-        .get(target.revolt)
-        .sendMessage(messageObject);
+      // Upload attachments to the stoat cdn so they do not expire
+      const ids = await uploadAttachments(revolt, message.attachments);
 
-      // Save in cache
-      Main.discordCache.push({
-        parentMessage: message.id,
-        parentAuthor: message.author.id,
-        createdMessage: sentMessage._id,
-        channelId: target.discord,
-      });
+      // The attachment limit of stoat is 5. If there is more than 5 attachment, split up the attachments.
+      const stoatAttachmentLimit = 5;
+      if (ids.length <= stoatAttachmentLimit) {
+        messageObject.attachments = ids;
+        const sentMessage = await revolt.channels
+            .get(target.revolt)
+            .sendMessage(messageObject);
+
+        // Save in cache
+        Main.discordCache.push({
+          parentMessage: message.id,
+          parentAuthor: message.author.id,
+          createdMessage: sentMessage._id,
+          channelId: target.discord,
+        });
+      } else {
+        messageObject.attachments = ids.splice(0, 5);
+        const revoltChannel = await revolt.channels.get(target.revolt);
+        const sentMessage = await revoltChannel.sendMessage(messageObject);
+        messageObject.attachments = ids;
+        messageObject.content = "";
+        await revoltChannel.sendMessage(messageObject);
+        // Message is split into two parts, but the cache only stores one. This might become a problem in the future.
+        Main.discordCache.push({
+          parentMessage: message.id,
+          parentAuthor: message.author.id,
+          createdMessage: sentMessage._id,
+          channelId: target.discord,
+        });
+
+      }
+
     }
   } catch (e) {
     npmlog.warn("Revolt", "Couldn't send a message to Revolt");
@@ -375,11 +398,12 @@ export async function handleDiscordMessageUpdate(
 
         if (message.content.length > 0) {
           messageObject.content = formatMessage(
-            message.attachments,
             message.content,
             message.mentions
           );
         }
+
+        messageObject.attachments = await uploadAttachments(revolt, message.attachments);
 
         if (message.embeds.length && message.author.bot) {
           if (typeof messageObject.embeds === "undefined")
