@@ -187,7 +187,7 @@ export class Bot {
       if (typeof message.content !== "string") return;
 
       const target = Main.mappings.find(
-        (mapping) => mapping.revolt === message.channel_id
+          (mapping) => mapping.revolt === message.channel_id
       );
 
       if (message.content.toString().startsWith("rc!")) {
@@ -216,9 +216,9 @@ export class Bot {
           npmlog.error("Revolt", e);
         }
       } else if (
-        target &&
-        message.author_id !== message.client.user._id &&
-        (!message.author.bot || target.allowBots)
+          target &&
+          message.author_id !== message.client.user._id &&
+          (!message.author.bot || target.allowBots)
       ) {
         handleRevoltMessage(this.discord, this.revolt, message, target);
       }
