@@ -9,9 +9,9 @@
   <img src="https://img.shields.io/github/languages/top/mayudev/revcord?style=for-the-badge">
 </p>
 
-<p align="center"><b>🌉 A cord to connect your Revolt and Discord servers</b></p>
+<p align="center"><b>🌉 A cord to connect your Stoat (formerly Revolt) and Discord servers</b></p>
 
-🔗 A bridge for Discord and [Revolt](https://revolt.chat) with easy setup through commands, written in TypeScript using [revolt.js](https://github.com/revoltchat/revolt.js).
+🔗 A bridge for Discord and [Stoat](https://stoat.chat) with easy setup through commands, written in TypeScript using [revolt.js](https://github.com/revoltchat/revolt.js).
 
 [Features](#features) | [Setup](#setup) | [Configuration](#configuration) | [Troubleshooting](#troubleshooting)
 
@@ -25,9 +25,9 @@
 - [x] Bridge emoji[^1]
 - [x] Seamlessly display user information
 
-[^1]: Revolt to Discord works, but limited to 3 emojis displayed to stop bombing with links. Animated emojis from Revolt will convert to static due to limits on Revolt's image backend
+[^1]: Stoat to Discord works, but limited to 3 emojis displayed to stop bombing with links. Animated emojis from Stoat will convert to static due to limits on Stoat's image backend
 
-![Screenshot - Revolt](docs/discord.png) ![Screenshot - Discord](docs/revolt.png)
+![Screenshot - Stoat](docs/discord.png) ![Screenshot - Discord](docs/revolt.png)
 
 ## 🔩 Setup <a id="setup"></a>
 
@@ -35,7 +35,7 @@ You can use [Docker](#using-docker) as well.
 
 **Node v16.9+ is required!**
 
-Important: this bot is meant to be used in one server (Discord+Revolt), but can be used in more as long as they share the same admin.
+Important: this bot is meant to be used in one server (Discord+Stoat), but can be used in more as long as they share the same admin.
 
 1. Clone this repository, install dependencies and build
 
@@ -46,7 +46,7 @@ npm install
 npm run build
 ```
 
-2. Create a bot in Discord ([Guide](https://discordjs.guide/preparations/setting-up-a-bot-application.html#creating-your-bot)) and Revolt (Open user settings -> `My Bots` -> `Create a bot`)
+2. Create a bot in Discord ([Guide](https://discordjs.guide/preparations/setting-up-a-bot-application.html#creating-your-bot)) and Stoat (Revolt) (Open user settings -> `My Bots` -> `Create a bot`)
 3. Place the relevant tokens in environment variables. The easiest way is to create a `.env` file (yes, a file called `.env`):
 
 ```
@@ -56,7 +56,7 @@ REVOLT_TOKEN = ...
 
 Of course, replace ... with tokens.
 
-If you are running a self-hosted instance of Revolt, additionally set the `API_URL` and `REVOLT_ATTACHMENT_URL` variable:
+If you are running a self-hosted instance of Stoat, additionally set the `API_URL` and `REVOLT_ATTACHMENT_URL` variable:
 
 ```
 API_URL = https://api.revolt.chat
@@ -71,11 +71,11 @@ REVOLT_ATTACHMENT_URL = https://autumn.revolt.chat
 
 ![intent](docs/intent.png)
 
-6. **Important!** On Revolt, make sure to add the bot to a role that has the **Masquerade** permission!
+6. **Important!** On Stoat, make sure to add the bot to a role that has the **Masquerade** permission!
 
-![revolt permissions](docs/mask.png)
+![stoat permissions](docs/mask.png)
 
-7. Invite the bot to to a Revolt and Discord server.
+7. Invite the bot to to a Stoat and Discord server.
 8. Start the bot using `npm start`.
 
 Note: it's recommended to use something like [pm2](https://pm2.keymetrics.io/) or [nodemon](https://nodemon.io/) to run the bot. Make sure to pass the `--experimental-specifier-resolution=node` flag to node manually, otherwise it will not run (it's included in the default start script).
@@ -100,19 +100,19 @@ docker-compose up -d
 
 ### with commands
 
-You can use either slash commands on Discord or `rc!` prefix on Revolt (use `rc!help` to show all commands)
+You can use either slash commands on Discord or `rc!` prefix on Stoat (use `rc!help` to show all commands)
 
-To use the commands, **you** need the `Administrator` permission on Discord. On Revolt, only the server owner can run them (for now).
+To use the commands, **you** need the `Administrator` permission on Discord. On Stoat, only the server owner can run them (for now).
 
-### Connecting Discord and Revolt channels
+### Connecting Discord and Stoat channels
 
 From **Discord**:
 
 ```
-/connect <Revolt channel name or ID>
+/connect <Stoat channel name or ID>
 ```
 
-From **Revolt**:
+From **Stoat**:
 
 ```
 rc!connect <Discord channel name or ID>
@@ -125,7 +125,7 @@ For example:
 /connect lounge
 /connect 01AB23BC34CD56DE78ZX90WWDB
 
-# From Revolt
+# From Stoat
 rc!connect general
 rc!connect 591234567890123456
 ```
@@ -140,7 +140,7 @@ From **Discord**:
 /disconnect
 ```
 
-From **Revolt**:
+From **Stoat**:
 
 ```
 rc!disconnect
@@ -156,7 +156,7 @@ From **Discord**:
 /connections
 ```
 
-From **Revolt**:
+From **Stoat**:
 
 ```
 rc!connections
