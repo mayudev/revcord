@@ -1,8 +1,10 @@
 import { Client as DiscordClient, TextChannel } from "discord.js";
 import npmlog from "npmlog";
-import { Client as RevoltClient } from "revolt.js";
-import { Channel } from "revolt.js/dist/maps/Channels";
-import { Message as RevoltMessage } from "revolt.js/dist/maps/Messages";
+import {
+  Client as RevoltClient,
+  Channel,
+  Message as RevoltMessage,
+} from "stoat.js";
 import { initiateDiscordChannel, unregisterDiscordChannel } from "./discord";
 import { InsufficientPermissionsError } from "./errors";
 import { ConnectionPair, Mapping } from "./interfaces";
@@ -44,7 +46,7 @@ export default class UniversalExecutor {
 
       if (!target) throw new ConnectionError("Revolt channel not found.");
       else {
-        revoltTarget = target._id;
+        revoltTarget = target.id;
         revoltChannelName = target.name;
       }
     } else {
@@ -90,7 +92,8 @@ export default class UniversalExecutor {
 
     // Try to find if an existing mapping already exists
     const existingMapping = Main.mappings.find(
-      (mapping) => mapping.discord === discordTarget || mapping.revolt === revoltTarget
+      (mapping) =>
+        mapping.discord === discordTarget || mapping.revolt === revoltTarget
     );
 
     if (existingMapping) {
@@ -139,8 +142,12 @@ export default class UniversalExecutor {
    */
   async disconnect(platform: Platforms, channelId: string) {
     if (platform === "discord") {
-      const mapping = Main.mappings.find((mapping) => mapping.discord === channelId);
-      const match = Main.mappings.map((mapping) => mapping.discord).indexOf(channelId);
+      const mapping = Main.mappings.find(
+        (mapping) => mapping.discord === channelId
+      );
+      const match = Main.mappings
+        .map((mapping) => mapping.discord)
+        .indexOf(channelId);
       if (match > -1) {
         // Remove the mapping from memory
         Main.mappings.splice(match, 1);
@@ -163,8 +170,12 @@ export default class UniversalExecutor {
 
       return;
     } else if (platform === "revolt") {
-      const mapping = Main.mappings.find((mapping) => mapping.revolt === channelId);
-      const match = Main.mappings.map((mapping) => mapping.revolt).indexOf(channelId);
+      const mapping = Main.mappings.find(
+        (mapping) => mapping.revolt === channelId
+      );
+      const match = Main.mappings
+        .map((mapping) => mapping.revolt)
+        .indexOf(channelId);
 
       if (match > -1) {
         // Remove the mapping from memory
@@ -236,9 +247,12 @@ export default class UniversalExecutor {
   /**
    * Pings a Discord user
    */
-  async pingDiscordUser(revoltMessage: RevoltMessage, username: string): Promise<string> {
+  async pingDiscordUser(
+    revoltMessage: RevoltMessage,
+    username: string
+  ): Promise<string> {
     const target = Main.mappings.find(
-      (mapping) => mapping.revolt === revoltMessage.channel_id
+      (mapping) => mapping.revolt === revoltMessage.channelId
     );
 
     if (target) {
@@ -266,14 +280,14 @@ export default class UniversalExecutor {
           }
 
           // Send message
-          const avatarURL = revoltMessage.author.generateAvatarURL({}, true);
+          const avatarURL = revoltMessage.author.avatarURL;
 
           await sendDiscordMessage(
             webhook,
             {
-              messageId: revoltMessage._id,
-              authorId: revoltMessage.author_id,
-              channelId: revoltMessage.channel_id,
+              messageId: revoltMessage.id,
+              authorId: revoltMessage.authorId,
+              channelId: revoltMessage.channelId,
             },
             `<@${user.id}>`,
             revoltMessage.author.username,

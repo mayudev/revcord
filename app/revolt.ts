@@ -5,8 +5,7 @@ import {
   Webhook,
 } from "discord.js";
 import npmlog from "npmlog";
-import { Client as RevoltClient } from "revolt.js";
-import { Message } from "revolt.js/dist/maps/Messages";
+import { Client as RevoltClient, Message } from "stoat.js";
 import {
   AttachmentType,
   Mapping,
@@ -38,7 +37,7 @@ async function formatMessage(revolt: RevoltClient, message: Message) {
 
   // Handle pings
   const pings = content.match(RevoltPingPattern);
-  if (pings && message.mentions) {
+  if (pings && message.mentionIds) {
     for (const ping of pings) {
       const matched = RevoltPingPattern.exec(ping);
       RevoltPingPattern.lastIndex = 0;
@@ -48,10 +47,11 @@ async function formatMessage(revolt: RevoltClient, message: Message) {
         const id = matched.groups["id"];
 
         if (id) {
-          const match = message.mentions.find((member) => member._id === id);
+          const match = message.mentionIds.find((mention) => mention === id);
 
+          const user = message.server.getMember(match);
           if (match) {
-            content = content.replace(ping, `@${match.username}`);
+            content = content.replace(ping, `@${user}`);
           }
         }
       }
@@ -108,9 +108,9 @@ async function formatMessage(revolt: RevoltClient, message: Message) {
   messageString += content + "\n";
 
   // Handle attachments
-  if (message.attachments !== null) {
+  if (message.attachments && Array.isArray(message.attachments)) {
     message.attachments.forEach((attachment) => {
-      messageString += revolt.generateFileURL(attachment) + "\n";
+      messageString += attachment.createFileURL() + "\n";
     });
   }
 
@@ -142,7 +142,7 @@ export async function handleRevoltMessage(
       }
 
       // Handle replies
-      const reply_ids = message.reply_ids;
+      const reply_ids = message.replyIds;
       let reply: ReplyObject;
 
       if (reply_ids) {
@@ -196,7 +196,7 @@ export async function handleRevoltMessage(
             const replyObject: ReplyObject = {
               pingable: false,
               entity: message.author.username,
-              entityImage: message.author.generateAvatarURL({ size: 64 }),
+              entityImage: message.author.avatarURL,
               content: message.content.toString(),
               attachments: attachments ? attachments : [],
               embedType: "reply",
@@ -235,14 +235,14 @@ export async function handleRevoltMessage(
         });
       }
 
-      const avatarURL = message.author.generateAvatarURL({}, true);
+      const avatarURL = message.author.avatarURL;
 
       await sendDiscordMessage(
         webhook,
         {
-          messageId: message._id,
-          authorId: message.author_id,
-          channelId: message.channel_id,
+          messageId: message.id,
+          authorId: message.authorId,
+          channelId: message.channelId,
         },
         messageString,
         message.author.username,
@@ -305,13 +305,13 @@ export async function handleRevoltMessageUpdate(
 ) {
   // Find target Discord channel
   const target = Main.mappings.find(
-    (mapping) => mapping.revolt === message.channel_id
+    (mapping) => mapping.revolt === message.channelId
   );
 
   if (target) {
     try {
       const cachedMessage = Main.revoltCache.find(
-        (cached) => cached.parentMessage === message._id
+        (cached) => cached.parentMessage === message.id
       );
 
       if (cachedMessage) {

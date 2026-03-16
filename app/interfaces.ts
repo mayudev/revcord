@@ -10,7 +10,7 @@ import {
   MessageMentions,
   User,
 } from "discord.js";
-import { Message } from "revolt.js/dist/maps/Messages";
+import { Message } from "stoat.js";
 import UniversalExecutor from "./universalExecutor";
 
 export interface Mapping {

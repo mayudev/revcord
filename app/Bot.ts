@@ -1,5 +1,9 @@
-import { Client as DiscordClient, Collection, GatewayIntentBits } from "discord.js";
-import { Client as RevoltClient } from "revolt.js";
+import {
+  Client as DiscordClient,
+  Collection,
+  GatewayIntentBits,
+} from "discord.js";
+import { Client as RevoltClient } from "stoat.js";
 import { REST } from "@discordjs/rest";
 import npmlog from "npmlog";
 
@@ -16,7 +20,11 @@ import {
   handleRevoltMessageUpdate,
 } from "./revolt";
 import { registerSlashCommands } from "./discord/slash";
-import { DiscordCommand, PartialDiscordMessage, RevoltCommand } from "./interfaces";
+import {
+  DiscordCommand,
+  PartialDiscordMessage,
+  RevoltCommand,
+} from "./interfaces";
 import { slashCommands } from "./discord/commands";
 import UniversalExecutor from "./universalExecutor";
 import { revoltCommands } from "./revolt/commands";
@@ -77,7 +85,12 @@ export class Bot {
       if (!this.usingJsonMappings) {
         // Register commands for each guild
         this.discord.guilds.cache.forEach((guild) => {
-          registerSlashCommands(this.rest, this.discord, guild.id, this.commandsJson);
+          registerSlashCommands(
+            this.rest,
+            this.discord,
+            guild.id,
+            this.commandsJson
+          );
         });
       }
 
@@ -87,7 +100,10 @@ export class Bot {
         try {
           await initiateDiscordChannel(channel, mapping);
         } catch (e) {
-          npmlog.error("Discord", "An error occurred while initializing webhooks");
+          npmlog.error(
+            "Discord",
+            "An error occurred while initializing webhooks"
+          );
           npmlog.error("Discord", e);
         }
       });
@@ -114,7 +130,12 @@ export class Bot {
     this.discord.on("guildCreate", (guild) => {
       if (!this.usingJsonMappings) {
         // Register slash commands in newly added server
-        registerSlashCommands(this.rest, this.discord, guild.id, this.commandsJson);
+        registerSlashCommands(
+          this.rest,
+          this.discord,
+          guild.id,
+          this.commandsJson
+        );
       }
     });
 
@@ -158,7 +179,13 @@ export class Bot {
   }
 
   setupRevoltBot() {
-    this.revolt = new RevoltClient({ apiURL: process.env.API_URL, autoReconnect: true });
+    this.revolt = new RevoltClient({
+      baseURL: process.env.API_URL,
+    });
+
+    this.revolt.on("error", (e) => {
+      npmlog.error("Revolt", "Error from Revolt API:", e);
+    });
 
     this.revolt.once("ready", () => {
       npmlog.info("Revolt", `Logged in as ${this.revolt.user.username}`);
@@ -183,11 +210,11 @@ export class Bot {
       });
     });
 
-    this.revolt.on("message", async (message) => {
+    this.revolt.on("messageCreate", async (message) => {
       if (typeof message.content !== "string") return;
 
       const target = Main.mappings.find(
-        (mapping) => mapping.revolt === message.channel_id
+        (mapping) => mapping.revolt === message.channelId
       );
 
       if (message.content.toString().startsWith("rc!")) {
@@ -217,14 +244,14 @@ export class Bot {
         }
       } else if (
         target &&
-        message.author_id !== message.client.user._id &&
+        message.authorId !== this.revolt.user.id &&
         (!message.author.bot || target.allowBots)
       ) {
         handleRevoltMessage(this.discord, this.revolt, message, target);
       }
     });
 
-    this.revolt.on("message/update", async (message) => {
+    this.revolt.on("messageUpdate", async (message) => {
       if (message.author.bot !== null) return;
 
       if (typeof message.content != "string") return;
@@ -232,8 +259,8 @@ export class Bot {
       handleRevoltMessageUpdate(this.revolt, message);
     });
 
-    this.revolt.on("message/delete", async (id) => {
-      handleRevoltMessageDelete(this.revolt, id);
+    this.revolt.on("messageDelete", async (message) => {
+      handleRevoltMessageDelete(this.revolt, message.id);
     });
 
     this.revolt.loginBot(process.env.REVOLT_TOKEN);

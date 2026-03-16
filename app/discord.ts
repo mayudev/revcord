@@ -8,7 +8,7 @@ import {
   Attachment,
 } from "discord.js";
 import npmlog from "npmlog";
-import { Client as RevoltClient } from "revolt.js";
+import { Client as RevoltClient } from "stoat.js";
 import { Main } from "./Main";
 import { Mapping, PartialDiscordMessage, ReplyObject } from "./interfaces";
 import {
@@ -136,7 +136,6 @@ export async function handleDiscordMessage(
   discord: DiscordClient,
   message: Message
 ) {
-  console.log(message);
   try {
     // Find target Revolt channel
     const target = Main.mappings.find(
@@ -329,7 +328,7 @@ export async function handleDiscordMessage(
       Main.discordCache.push({
         parentMessage: message.id,
         parentAuthor: message.author.id,
-        createdMessage: sentMessage._id,
+        createdMessage: sentMessage.id,
         channelId: target.discord,
       });
     }

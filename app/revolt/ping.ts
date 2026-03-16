@@ -1,6 +1,6 @@
 import universalExecutor, { EntityNotFoundError } from "../universalExecutor";
 import npmlog from "npmlog";
-import { Message } from "revolt.js/dist/maps/Messages";
+import { Message } from "stoat.js";
 import { RevoltCommand } from "../interfaces";
 
 export class PingCommand implements RevoltCommand {
@@ -28,7 +28,10 @@ export class PingCommand implements RevoltCommand {
         await message.reply("Error! " + e.message);
       } else {
         await message.reply("Something went very wrong. Check the logs.");
-        npmlog.error("Discord", "An error occurred while trying to ping a user");
+        npmlog.error(
+          "Discord",
+          "An error occurred while trying to ping a user"
+        );
         npmlog.error("Discord", e);
       }
     }

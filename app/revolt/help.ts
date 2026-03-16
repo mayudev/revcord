@@ -1,6 +1,6 @@
 import { RevoltCommand } from "../interfaces";
 import universalExecutor from "../universalExecutor";
-import { Message } from "revolt.js/dist/maps/Messages";
+import { Message } from "stoat.js";
 import { revoltCommands } from "./commands";
 
 export class HelpCommand implements RevoltCommand {

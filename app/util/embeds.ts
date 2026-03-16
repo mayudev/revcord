@@ -1,6 +1,6 @@
 import { Embed } from "discord.js";
-import type { SendableEmbed } from "revolt-api";
 import { fitOrEmpty, truncate } from "./truncate";
+import { API } from "stoat.js";
 
 interface Field {
   name: string;
@@ -57,8 +57,8 @@ export class RevcordEmbed {
   }
 
   // Creates a Revolt embed
-  toRevolt(): SendableEmbed {
-    let result: SendableEmbed = {};
+  toRevolt(): API.SendableEmbed {
+    let result: API.SendableEmbed = {};
 
     let content = "";
 
