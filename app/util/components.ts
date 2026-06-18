@@ -1,4 +1,6 @@
 import { Message } from "discord.js";
+import npmlog from "npmlog"
+import { componentsV2ToText, extractComponentImageUrls } from "./util/components";
 
 // ---------------------------------------------------------------------------
 // Raw component data shapes (Discord API types not fully exposed by discord.js)
@@ -9,7 +11,7 @@ interface RawComponent {
   id?: number;
   content?: string;           // type 10 TextDisplay
   components?: RawComponent[]; // type 17 Container, type 9 Section, type 1 ActionRow
-  accessory?: RawComponent;   // type 9 Section
+  items?: Array<{ media?: { url?: string } }>;
   divider?: boolean;          // type 14 Separator
   spacing?: number;           // type 14 Separator
   spoiler?: boolean;          // type 17 Container
@@ -108,6 +110,36 @@ function transformMarkdown(text: string): string {
  *    2 Button      → skip
  *    3 SelectMenu  → skip
  */
+
+// discord.js puts child components on the class instance (.components),
+// NOT inside .data — so we have to pull them separately.
+function extractRawComponent(c: any): RawComponent {
+  const data: RawComponent = { ...(c.data ?? {}) };
+
+  if (Array.isArray(c.components) && c.components.length > 0) {
+    data.components = c.components.map(extractRawComponent);
+  }
+
+  if (c.accessory) {
+    data.accessory = extractRawComponent(c.accessory);
+  }
+
+  // ThumbnailComponent stores media on the instance, not always in .data
+  if (c.media != null && !data.media) {
+    data.media = { url: (c.media as any)?.url ?? String(c.media) };
+  }
+
+  // MediaGalleryComponent stores items on the instance, not in .data
+  if (Array.isArray(c.items) && c.items.length > 0 && !data.items) {
+    data.items = c.items.map((item: any) => ({
+      ...(item.data ?? {}),
+      media: item.media ? { url: (item.media as any)?.url } : (item.data?.media),
+    }));
+  }
+
+  return data;
+}
+
 function walkComponents(components: RawComponent[]): string[] {
   const parts: string[] = [];
 
@@ -127,8 +159,15 @@ function walkComponents(components: RawComponent[]): string[] {
         parts.push(c.divider ? "---" : "");
         break;
 
-      case 9: // Section — recurse children, ignore accessory button
+      case 9: // Section — recurse children, also extract thumbnail accessory
         parts.push(...walkComponents(c.components ?? []));
+        if (c.accessory?.type === 11 && c.accessory.media?.url) {
+          parts.push(`![image](${c.accessory.media.url})`);
+        }
+        break;
+
+      case 11: // Thumbnail (standalone, outside a section)
+        if (c.media?.url) parts.push(`![image](${c.media.url})`);
         break;
 
       case 1:  // ActionRow
@@ -162,15 +201,29 @@ function walkComponents(components: RawComponent[]): string[] {
  * whether to skip the message entirely).
  */
 export function componentsV2ToText(message: Message): string | null {
-  if (!message.components || message.components.length === 0) return null;
+  if (!message.components || message.components.length === 0) {
+    return null;
+  }
 
-  // discord.js wraps raw component data in class instances; .data is the raw JSON
-  const raw = message.components.map((c) => (c as any).data as RawComponent);
+  npmlog.warn(
+    "COMPONENT PARSER INPUT",
+    JSON.stringify(
+      message.components.map((c: any) => c.data),
+      null,
+      2
+    )
+  );
+
+  const raw = message.components.map((c: any) => extractRawComponent(c));
+
+  npmlog.warn("EXTRACTED FULL", JSON.stringify(raw, null, 2));
 
   const text = walkComponents(raw)
     .join("\n")
-    .replace(/\n{3,}/g, "\n\n") // collapse 3+ consecutive newlines
+    .replace(/\n{3,}/g, "\n\n")
     .trim();
+
+  npmlog.warn("COMPONENT PARSER OUTPUT", text);
 
   return text.length > 0 ? text : null;
 }
