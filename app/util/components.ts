@@ -1,7 +1,5 @@
 import { Message } from "discord.js";
 import npmlog from "npmlog"
-import { componentsV2ToText, extractComponentImageUrls } from "./util/components";
-
 // ---------------------------------------------------------------------------
 // Raw component data shapes (Discord API types not fully exposed by discord.js)
 // ---------------------------------------------------------------------------
@@ -11,7 +9,9 @@ interface RawComponent {
   id?: number;
   content?: string;           // type 10 TextDisplay
   components?: RawComponent[]; // type 17 Container, type 9 Section, type 1 ActionRow
+  media?: { url?: string };  // type 11 Thumbnail
   items?: Array<{ media?: { url?: string } }>;
+  accessory?: RawComponent;   // type 9 Section
   divider?: boolean;          // type 14 Separator
   spacing?: number;           // type 14 Separator
   spoiler?: boolean;          // type 17 Container
@@ -116,6 +116,12 @@ function transformMarkdown(text: string): string {
 function extractRawComponent(c: any): RawComponent {
   const data: RawComponent = { ...(c.data ?? {}) };
 
+  // DEBUG - remove after finding the right path
+  if (data.type === 12) {
+    npmlog.warn("MEDIAGALLERY KEYS", Object.keys(c).join(", "));
+    npmlog.warn("MEDIAGALLERY DATA", JSON.stringify(c.data, null, 2));
+  }
+
   if (Array.isArray(c.components) && c.components.length > 0) {
     data.components = c.components.map(extractRawComponent);
   }
@@ -138,6 +144,35 @@ function extractRawComponent(c: any): RawComponent {
   }
 
   return data;
+}
+
+export function extractComponentImageUrls(message: Message): string[] {
+  if (!message.components || message.components.length === 0) return [];
+  const raw = message.components.map((c: any) => extractRawComponent(c));
+  return collectUrls(raw);
+}
+
+function collectUrls(components: RawComponent[]): string[] {
+  const urls: string[] = [];
+  for (const c of components) {
+    switch (c.type) {
+      case 17:
+        urls.push(...collectUrls(c.components ?? []));
+        break;
+      case 9:
+        urls.push(...collectUrls(c.components ?? []));
+        // Skip accessory — always a store logo (Steam, Epic, etc.)
+        break;
+      // case 11 removed — standalone thumbnails are store icons, not game art
+      case 12: // MediaGallery — this is the actual game image
+        for (const item of c.items ?? [])
+          if (item.media?.url) urls.push(item.media.url);
+        break;
+      default:
+        if (Array.isArray(c.components)) urls.push(...collectUrls(c.components));
+    }
+  }
+  return urls;
 }
 
 function walkComponents(components: RawComponent[]): string[] {

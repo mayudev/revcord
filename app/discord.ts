@@ -5,6 +5,7 @@ import {Main} from "./Main";
 import {Mapping, PartialDiscordMessage, ReplyObject} from "./interfaces";
 import {DiscordChannelPattern, DiscordEmojiPattern, DiscordPingPattern, TrailingNewlines,} from "./util/regex";
 import {RevcordEmbed} from "./util/embeds";
+import { componentsV2ToText, extractComponentImageUrls } from "./util/components";
 import {checkWebhookPermissions} from "./util/permissions";
 import {truncate} from "./util/truncate";
 import Uploader from 'revolt-uploader';
@@ -265,11 +266,35 @@ export async function handleDiscordMessage(
       let stickerUrl = sticker && sticker.url;
 
       // Format message content (parse emojis, mentions, images etc.)
-      const messageString = formatMessage(
+      if (message.components?.length) {
+        for (const component of message.components) {
+          npmlog.warn(
+            "COMPONENT FULL",
+            JSON.stringify((component as any).data, null, 2)
+          );
+        }
+      }
+
+      let messageString = formatMessage(
         message.content,
         message.mentions,
         stickerUrl
       );
+
+      npmlog.warn(
+        "MESSAGE STRING BEFORE COMPONENTS",
+        JSON.stringify(messageString)
+      );
+
+      if (!messageString && message.components?.length) {
+        messageString = componentsV2ToText(message) ?? "";
+      }
+
+      npmlog.warn(
+        "MESSAGE STRING AFTER COMPONENTS",
+        JSON.stringify(messageString)
+      );
+
 
       // Prepare message object
       // revolt.js doesn't support masquerade yet, but we can use them using this messy trick.
@@ -302,6 +327,7 @@ export async function handleDiscordMessage(
       // Translate embeds, if present.
       // Allow embeds only from bots, since a regular user
       // shouldn't be able to send them.
+
       if (message.embeds.length && message.author.bot) {
         // Add an empty array
         if (typeof messageObject.embeds === "undefined")
@@ -309,6 +335,10 @@ export async function handleDiscordMessage(
 
         // Translate embed
         try {
+          npmlog.warn(
+            "EMBED DEBUG:",
+            JSON.stringify(message.embeds[0], null, 2)
+          );
           const embed = new RevcordEmbed()
             .fromDiscord(message.embeds[0])
             .toRevolt();
@@ -323,10 +353,29 @@ export async function handleDiscordMessage(
       // Upload attachments to the stoat cdn so they do not expire
       const ids = await uploadAttachments(revolt, message.attachments);
 
+      // Upload images from Components v2 (thumbnails, media galleries)
+      if (message.components?.length && message.author.bot) {
+        const { extractComponentImageUrls } = require("./util/components");
+        for (const url of extractComponentImageUrls(message)) {
+          try {
+            const uploader = new Uploader(revolt);
+            ids.push(await uploader.uploadUrl(url, url.split("/").pop() || "image.webp"));
+          } catch (e) {
+            npmlog.warn("Discord", "Failed to upload component image: " + url);
+          }
+        }
+}
+
       // The attachment limit of stoat is 5. If there is more than 5 attachment, split up the attachments.
       const stoatAttachmentLimit = 5;
       if (ids.length <= stoatAttachmentLimit) {
         messageObject.attachments = ids;
+
+        npmlog.warn(
+          "MESSAGE OBJECT",
+          JSON.stringify(messageObject, null, 2)
+        );
+
         const sentMessage = await revolt.channels
             .get(target.revolt)
             .sendMessage(messageObject);
@@ -357,21 +406,37 @@ export async function handleDiscordMessage(
 
     }
   } catch (e) {
-    npmlog.warn("Revolt", "Couldn't send a message to Revolt");
-    npmlog.warn("Revolt", e);
+      npmlog.warn("Revolt", "Couldn't send a message to Revolt");
 
-    if (
-      "response" in e &&
-      "status" in e.response &&
-      e.response.status === 403
-    ) {
-      npmlog.error(
-        "Revolt",
-        "It seems the bot doesn't have enough permissions (most likely Masquerade)"
+      npmlog.warn(
+        "REVOLT ERROR FULL",
+        JSON.stringify(
+          {
+            name: e?.name,
+            message: e?.message,
+            stack: e?.stack
+          },
+          null,
+          2
+        )
       );
+
+      console.error(e);
+
+      if (
+        e &&
+        "response" in e &&
+        e.response &&
+        "status" in e.response &&
+        e.response.status === 403
+      ) {
+        npmlog.error(
+          "Revolt",
+          "It seems the bot doesn't have enough permissions (most likely Masquerade)"
+        );
+      }
     }
   }
-}
 
 /**
  * Handle Discord message update and update the relevant message in Revolt
