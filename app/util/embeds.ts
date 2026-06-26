@@ -97,7 +97,11 @@ export class RevcordEmbed {
     });
 
     // the offset is required for some reason. this needs to be investigated further
-    result.description = truncate(content, 1900);
+    const desc = truncate(content, 1900);
+
+    if (desc.trim().length > 0) {
+        result.description = desc;
+    }
 
     return result;
   }
