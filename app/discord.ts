@@ -5,7 +5,7 @@ import {Main} from "./Main";
 import {Mapping, PartialDiscordMessage, ReplyObject} from "./interfaces";
 import {DiscordChannelPattern, DiscordEmojiPattern, DiscordPingPattern, TrailingNewlines,} from "./util/regex";
 import {RevcordEmbed} from "./util/embeds";
-import { componentsV2ToText, extractComponentImageUrls } from "./util/components";
+import { parseComponentsV2, ParsedComponent } from "./util/components";
 import {checkWebhookPermissions} from "./util/permissions";
 import {truncate} from "./util/truncate";
 import Uploader from 'revolt-uploader';
@@ -116,7 +116,6 @@ async function uploadAttachments(stoatClient, discordAttachments){
   let ids = [];
   try{
     for (let [_, element] of discordAttachments) {
-      console.log(element);
       ids.push(await uploader.uploadUrl(element.url, element.name));
     }
   } catch (e) {
@@ -124,6 +123,18 @@ async function uploadAttachments(stoatClient, discordAttachments){
     npmlog.warn("Stoat", e);
   }
   return ids;
+}
+
+async function uploadExternalFile(
+    stoatClient,
+    url: string
+) {
+    const uploader = new Uploader(stoatClient);
+
+    const filename =
+        url.split("/").pop()?.split("?")[0] ?? "image";
+
+    return await uploader.uploadUrl(url, filename);
 }
 
 /**
@@ -137,7 +148,6 @@ export async function handleDiscordMessage(
   discord: DiscordClient,
   message: Message
 ) {
-  console.log(message);
   try {
     // Find target Revolt channel
     const target = Main.mappings.find(
@@ -265,41 +275,9 @@ export async function handleDiscordMessage(
       const sticker = message.stickers.first();
       let stickerUrl = sticker && sticker.url;
 
-      // Format message content (parse emojis, mentions, images etc.)
-      if (message.components?.length) {
-        for (const component of message.components) {
-          npmlog.warn(
-            "COMPONENT FULL",
-            JSON.stringify((component as any).data, null, 2)
-          );
-        }
-      }
-
-      let messageString = formatMessage(
-        message.content,
-        message.mentions,
-        stickerUrl
-      );
-
-      npmlog.warn(
-        "MESSAGE STRING BEFORE COMPONENTS",
-        JSON.stringify(messageString)
-      );
-
-      if (!messageString && message.components?.length) {
-        messageString = componentsV2ToText(message) ?? "";
-      }
-
-      npmlog.warn(
-        "MESSAGE STRING AFTER COMPONENTS",
-        JSON.stringify(messageString)
-      );
-
-
       // Prepare message object
       // revolt.js doesn't support masquerade yet, but we can use them using this messy trick.
       const messageObject = {
-        content: truncate(messageString, 1984),
         masquerade: mask,
         replies: replyPing
           ? [
@@ -324,83 +302,120 @@ export async function handleDiscordMessage(
         });
       }
 
-      // Translate embeds, if present.
-      // Allow embeds only from bots, since a regular user
-      // shouldn't be able to send them.
-
       if (message.embeds.length && message.author.bot) {
-        // Add an empty array
-        if (typeof messageObject.embeds === "undefined")
-          messageObject.embeds = [];
+          if (typeof messageObject.embeds === "undefined")
+              messageObject.embeds = [];
 
-        // Translate embed
-        try {
-          npmlog.warn(
-            "EMBED DEBUG:",
-            JSON.stringify(message.embeds[0], null, 2)
-          );
-          const embed = new RevcordEmbed()
-            .fromDiscord(message.embeds[0])
-            .toRevolt();
+          try {
+              const embed = new RevcordEmbed()
+                  .fromDiscord(message.embeds[0])
+                  .toRevolt();
 
-          messageObject.embeds.push(embed);
-        } catch (e) {
-          npmlog.warn("Discord", "Failed to translate embed.");
-          npmlog.warn("Discord", e);
-        }
+              messageObject.embeds.push(embed);
+          } catch (e) {
+              npmlog.warn("Discord", "Failed to translate embed.");
+              npmlog.warn("Discord", e);
+          }
       }
 
-      // Upload attachments to the stoat cdn so they do not expire
-      const ids = await uploadAttachments(revolt, message.attachments);
+      const parsed = parseComponentsV2(message);
 
-      // Upload images from Components v2 (thumbnails, media galleries)
-      if (message.components?.length && message.author.bot) {
-        const { extractComponentImageUrls } = require("./util/components");
-        for (const url of extractComponentImageUrls(message)) {
-          try {
-            const uploader = new Uploader(revolt);
-            ids.push(await uploader.uploadUrl(url, url.split("/").pop() || "image.webp"));
-          } catch (e) {
-            npmlog.warn("Discord", "Failed to upload component image: " + url);
+      const revoltChannel = revolt.channels.get(target.revolt);
+
+      let firstSentMessage: any = null;
+
+      const ids = await uploadAttachments(
+          revolt,
+          message.attachments
+      );
+
+      if (parsed.length > 0) {
+
+          for (const part of parsed) {
+
+              if (part.type === "text") {
+
+                  if (!part.content.trim())
+                      continue;
+
+                  const sent = await revoltChannel.sendMessage({
+                      content: part.content,
+                      masquerade: mask,
+                      replies: firstSentMessage ? [] : messageObject.replies,
+                  });
+
+                  if (!firstSentMessage)
+                      firstSentMessage = sent;
+
+              } else if (part.type === "image") {
+
+                  const attachmentId = await uploadExternalFile(
+                      revolt,
+                      part.url
+                  );
+
+                  const sent = await revoltChannel.sendMessage({
+                      attachments: [attachmentId],
+                      masquerade: mask,
+                  });
+
+                  if (!firstSentMessage)
+                      firstSentMessage = sent;
+
+              }
+
           }
-        }
-}
 
-      // The attachment limit of stoat is 5. If there is more than 5 attachment, split up the attachments.
-      const stoatAttachmentLimit = 5;
-      if (ids.length <= stoatAttachmentLimit) {
-        messageObject.attachments = ids;
-
-        npmlog.warn(
-          "MESSAGE OBJECT",
-          JSON.stringify(messageObject, null, 2)
-        );
-
-        const sentMessage = await revolt.channels
-            .get(target.revolt)
-            .sendMessage(messageObject);
-
-        // Save in cache
-        Main.discordCache.push({
-          parentMessage: message.id,
-          parentAuthor: message.author.id,
-          createdMessage: sentMessage._id,
-          channelId: target.discord,
-        });
       } else {
-        messageObject.attachments = ids.splice(0, 5);
-        const revoltChannel = await revolt.channels.get(target.revolt);
-        const sentMessage = await revoltChannel.sendMessage(messageObject);
-        messageObject.attachments = ids;
-        messageObject.content = "";
-        await revoltChannel.sendMessage(messageObject);
-        // Message is split into two parts, but the cache only stores one. This might become a problem in the future.
-        Main.discordCache.push({
-          parentMessage: message.id,
-          parentAuthor: message.author.id,
-          createdMessage: sentMessage._id,
-          channelId: target.discord,
-        });
+
+          const messageString = formatMessage(
+              message.content,
+              message.mentions,
+              stickerUrl
+          );
+
+          const attachmentIds = await uploadAttachments(
+              revolt,
+              message.attachments
+          );
+
+          messageObject.attachments = attachmentIds;
+
+          messageObject.content = truncate(messageString, 1984);
+
+          messageObject.attachments = attachmentIds;
+
+          const sent = await revoltChannel.sendMessage(messageObject);
+
+          firstSentMessage = sent;
+
+      }
+
+      // Send normal Discord attachments afterwards
+      if (ids.length) {
+
+          const stoatAttachmentLimit = 5;
+
+          while (ids.length) {
+
+              await revoltChannel.sendMessage({
+                  attachments: ids.splice(0, stoatAttachmentLimit),
+                  masquerade: mask,
+              });
+
+          }
+
+      }
+
+      // Cache first message
+      if (firstSentMessage) {
+
+          Main.discordCache.push({
+              parentMessage: message.id,
+              parentAuthor: message.author.id,
+              createdMessage: firstSentMessage._id,
+              channelId: target.discord,
+          });
 
       }
 
@@ -420,8 +435,6 @@ export async function handleDiscordMessage(
           2
         )
       );
-
-      console.error(e);
 
       if (
         e &&
@@ -461,11 +474,13 @@ export async function handleDiscordMessageUpdate(
       if (cachedMessage) {
         const messageObject = {} as any;
 
-        if (message.content.length > 0) {
-          messageObject.content = formatMessage(
+        const messageString = formatMessage(
             message.content,
             message.mentions
-          );
+        );
+
+        if (messageString.length > 0) {
+            messageObject.content = messageString;
         }
 
         messageObject.attachments = await uploadAttachments(revolt, message.attachments);
