@@ -8,6 +8,4 @@ services:
     volumes:
       - ./revcord.sqlite:/app/revcord.sqlite:rw
       - ./.env:/app/.env
-    extra_hosts:
-      - "stoat.sanc-mcserver.duckdns.org:192.168.1.14"
     restart: unless-stopped
