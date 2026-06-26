@@ -5,7 +5,7 @@ import {Main} from "./Main";
 import {Mapping, PartialDiscordMessage, ReplyObject} from "./interfaces";
 import {DiscordChannelPattern, DiscordEmojiPattern, DiscordPingPattern, TrailingNewlines,} from "./util/regex";
 import {RevcordEmbed} from "./util/embeds";
-import { parseComponentsV2, ParsedComponent } from "./util/components";
+import { parseComponentsV2 } from "./util/components";
 import {checkWebhookPermissions} from "./util/permissions";
 import {truncate} from "./util/truncate";
 import Uploader from 'revolt-uploader';
